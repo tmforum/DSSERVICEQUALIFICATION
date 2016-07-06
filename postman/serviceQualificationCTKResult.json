@@ -1,0 +1,1901 @@
+{
+    "id": "",
+    "name": "Default",
+    "timestamp": 1467782240351,
+    "collection_id": "8e1c651a-2496-f1b9-a1f8-991de65f37d8",
+    "folder_id": 0,
+    "target_type": "collection",
+    "environment_id": "e9ff5be6-a134-95a0-3719-abe85cd8241b",
+    "count": 1,
+    "collection": {
+        "id": "8e1c651a-2496-f1b9-a1f8-991de65f37d8",
+        "name": "TMF ServiceQualification Management API",
+        "description": "",
+        "order": [
+            "677094aa-1cc3-1dc1-fcde-da1568577186",
+            "16d369e9-b8d5-0d13-0920-2976972b0d10",
+            "d8ad8b38-cd79-fa86-d72f-dece365aae58",
+            "9a523a45-7b7c-9c80-0448-7c5cc43fdedd",
+            "2dc93626-f8ac-808a-eeda-8f083bdee8db",
+            "3859548e-af13-549b-2313-cace98a058ef",
+            "bb91270e-ca48-3134-62e7-3465d3f68e82",
+            "24a24809-fdf6-62bf-b6f4-8d5283efca2f"
+        ],
+        "folders": [],
+        "timestamp": 1466058631021,
+        "owner": 0,
+        "remoteLink": "",
+        "public": false,
+        "requests": [
+            {
+                "id": "16d369e9-b8d5-0d13-0920-2976972b0d10",
+                "headers": "Content-Type: application/json\nAccept: application/json\n",
+                "url": "{{serviceQualificationManagementApi}}/serviceQualification",
+                "preRequestScript": "postman.setEnvironmentVariable(\"testName\",  \"tmf-service-qualification-002\");",
+                "pathVariables": {},
+                "method": "POST",
+                "data": [],
+                "dataMode": "raw",
+                "tests": "var dataOut = JSON.parse(responseBody);\n\ntests[\"Content-Type is present \" + postman.getResponseHeader(\"Content-type\")] = postman.getResponseHeader(\"Content-type\");\n\ntests[\"Status code is 201\"] = responseCode.code === 201;\n\ntests[\"Response contains ID \" + dataOut.id.toString()] = dataOut.id.toString() !== \"\";\n\ntests[\"Response contains HREF\" ] = dataOut.href.toString() !== \"\";\n\npostman.setGlobalVariable(\"ID2\", dataOut.id.toString());\n\npostman.setGlobalVariable(\"lastResponse\" + postman.getEnvironmentVariable(\"testName\"), dataOut);\npostman.setGlobalVariable(\"lastRequest\"+ postman.getEnvironmentVariable(\"testName\"), request.data );\n\nvar dataIn = JSON.parse(request.data);\n\n\nconsole.log(\"request \" + dataIn);\nconsole.log(\"request type\" + typeof(dataIn));\n\nif( typeof(dataOut.serviceQualificationItem) !== 'undefined' && dataOut.serviceQualificationItem.length > 0) {\n    var items = dataOut.serviceQualificationItem;\n    for(var i = 0; i < items.length; i++) {\n        tests[\"Response contains service \"] = typeof(items[i].service) !== 'undefined';\n        validateService(items[i].service);\n        \n        tests[\"Response serviceQualificationItem contains availability\"+ items[i].availability.toString()] = items[i].availability.toString() !== \"\";\n        tests[\"Response serviceQualificationItem contains serviceabilityDate \"+ items[i].serviceabilityDate.toString()] = items[i].serviceabilityDate.toString() !== \"\";\n        validate(dataIn.serviceQualificationItem[0].service, items[i].service);\n    }\n}\n\nfunction validateService(service) {\n    if(\"No\" === dataIn.provideAlternative) {\n        tests[\"Response service contains serviceCharacteristic \"] = typeof(service.serviceCharacteristic) !== 'undefined';\n        validateServiceCharacteristic(service.serviceCharacteristic);\n    }\n    \n    tests[\"Response service contains serviceSpecification \"] = typeof(service.serviceSpecification) !== 'undefined';\n    validateServiceSpecification(service.serviceSpecification);\n    \n  \n}\n\nfunction validateServiceCharacteristic(serviceCharacteristic) {\n    for(var i = 0; i < serviceCharacteristic.length; i++ ) {\n        tests[\"Response serviceCharacteristic contains name \"+ serviceCharacteristic[i].name] = true;\n        tests[\"Response serviceCharacteristic contains value \"+ serviceCharacteristic[i].value] = true;\n    }\n   \n}\n\nfunction validateServiceSpecification(serviceSpecification) {\n    tests[\"Response serviceSpecification contains id \"+ serviceSpecification.id.toString()] =serviceSpecification.id.toString() !== \"\";\n    tests[\"Response serviceSpecification contains href \"+ serviceSpecification.href.toString()] = serviceSpecification.href.toString() !== \"\";\n    tests[\"Response serviceSpecification contains serviceCategoryId \"+ serviceSpecification.serviceCategoryId.toString()] = serviceSpecification.serviceCategoryId.toString() !== \"\";\n}\n\n\ntests[\"POST Body Response provideAlternative equals Request provideAlternative\"  ] = objectEquals(dataIn.provideAlternative, dataOut.provideAlternative);\ntests[\"POST Body Response provideOnlyEligible equals Request provideOnlyEligible\"  ] = objectEquals(dataIn.provideOnlyEligible, dataOut.provideOnlyEligible);\ntests[\"POST Body Response Address equals Request Address\"  ] = objectEquals(dataIn.address, dataOut.address);\ntests[\"Response contains eligibilityDate \" + dataOut.eligibilityDate.toString()] = dataOut.eligibilityDate.toString() !== \"\";\n\n\nfunction validate(inService, outService) {\n        \n    tests[\"POST Body Response serviceSpecification equals Request serviceSpecification\"  ] = objectEquals(inService.serviceCharacteristic, outService.serviceCharacteristic);\n    \n    if( typeof(dataIn.provideAlternative && inService.serviceSpecification) !== 'undefined' ) {\n        tests[\"POST Body Response serviceSpecification equals Request serviceSpecification\"  ] = objectEquals(inService.serviceSpecification, outService.serviceSpecification);\n        \n        if(\"No\" === dataIn.provideAlternative && inService.serviceSpecification.serviceCategoryId === \"internetService\") {\n            tests[\"Serivce qualification\"] = internetServiceQualification(inService.serviceCharacteristic, outService.serviceSpecification.serviceSpecificationCharacteristic);\n        }\n    }\n\n}\n\nfunction internetServiceQualification(inAttrs, outAttrs) {\n    // tests[\"inAttrs: \" + JSON.stringify(inAttrs)] = true;\n    \n    // tests[\" outAttrs: \" + JSON.stringify(outAttrs) ] = true;\n    \n    // tests[\"dataIn.provideAlternative: \" + dataIn.provideAlternative] = true;\n    \n    if( dataIn.provideAlternative === \"No\") {\n        \n        for(var i = 0; i < inAttrs.length; i++) {\n            for(var j = 0; j < outAttrs.length; j++) {\n                if(inAttrs[i].name == outAttrs[j].name) {\n                    \n                    // tests[\"inAttrs: \" + JSON.stringify(inAttrs[i])] = true;\n                    // tests[\"outAttrs: \" + JSON.stringify(outAttrs[j])] = true;\n\n                    retIn  = convertDataUnit(inAttrs[i].value);\n                    retOut = convertDataUnit(outAttrs[j].valueto);\n                    \n                    // tests[\"retIn: \" + JSON.stringify(retIn)] = true;\n                    // tests[\"retOut: \" + JSON.stringify(retOut)] = true;\n                    \n                    if(retIn.value <= retOut.value) {\n                        return true;\n                    }\n                }\n            }\n        }\n        return false;\n    }\n    return true;\n}\n\nfunction convertDataUnit(dataStr) {\n    // tests[\"dataStr:\" + dataStr] = true;\n    var data = {};\n    data.unit = \"KBPS\";\n    \n    unit = dataStr.substr(-4, 4);\n    value = dataStr.substr(0, dataStr.length-4);\n    //tests[\"unit: \" + unit.toString() + \",value:\" + value.toString() + \",data:\" + dataStr.toString()] = true;\n    if(unit.substr(0,1) === \"K\") {\n        data.value = parseInt(value);\n    } else if(unit.substr(0,1) === \"M\") {\n        data.value = parseInt(value) * 1000;\n    } else if(unit.substr(0,1) === \"G\") {\n        data.value = parseInt(value) * 1000 * 1000;\n    }\n    return data;\n}\n\n\nfunction objectEquals(v1, v2) {\n\n    if (typeof(v1) !== typeof(v2)) {\n         console.log(\"property typeof(v1) !==typeof(v2)\" + typeof(v1)  + typeof(v2) + \"==>\" + v1 + \"!=\" + v2);\n        return false;\n    }\n\n    if (typeof(v1) === \"function\") {\n        return v1.toString() === v2.toString();\n    }\n\n    if (v1 instanceof Object && v2 instanceof Object) {\n       \n        var r = true;\n        for (var k in v1) {\n            r = objectEquals(v1[k], v2[k]);\n            \n            if (!r) {\n                 tests[\"property \" + k.toString() + \"==>\" + v1[k] + \"!=\" + v2[k]] = false;\n                 console.log(\"property \" + k.toString() + \"==>\" + v1[k] + \"!=\" + v2[k]);\n                 postman.setGlobalVariable(\"unequal\" +  k.toString(), v1[k] + \"!=\" + v2[k]);\n                \n                return false;\n            } else {\n                 //tests[\"property \" + k.toString() + \"==>\" + v1[k] + \"=\" + v2[k]] = true;\n            }\n        }\n        return true;\n    } else {\n        return v1 === v2;\n    }\n}\n",
+                "currentHelper": "normal",
+                "helperAttributes": {},
+                "time": 1467782163060,
+                "name": "create a service qualification request - case 2",
+                "description": "can the access NW be provided at a specific location",
+                "collectionId": "8e1c651a-2496-f1b9-a1f8-991de65f37d8",
+                "responses": [],
+                "rawModeData": "{\n    \"address\" : \n    {\n         \"href\" : \"https://www.google.ca/maps/dir/google+map+montreal+place+ville+marie\"\n     },\n     \"provideAlternative\" : \"Yes\",\n     \"provideOnlyEligible\" : \"Yes\",\n     \"description\" : \"example of a qualification task\",\n     \"serviceQualificationItem\" : \n     [\n        {\n            \"service\" : {\n                \"serviceCharacteristic\" : [{\n                    \"name\" : \"upstreamSpeed\",\n                    \"value\" : \"50MBPS\"\n                }],\n                \"serviceSpecification\" : {\n                    \"id\" : \"ADSL\",\n                    \"href\" : \"https://serviceSpecification/ADSL\",\n                    \"serviceCategoryId\" : \"internetService\"\n                }\n            }\n        }\n     ]\n}\n"
+            },
+            {
+                "id": "24a24809-fdf6-62bf-b6f4-8d5283efca2f",
+                "headers": "Content-Type: application/json\nAccept: application/json\n",
+                "url": "{{serviceQualificationManagementApi}}/productOfferingQualification/{{ID4}}",
+                "preRequestScript": "postman.setEnvironmentVariable(\"testName\",  \"tmf-product-offering-qualification-002\");",
+                "pathVariables": {},
+                "method": "GET",
+                "data": null,
+                "dataMode": "params",
+                "version": 2,
+                "tests": "var dataOut = JSON.parse(responseBody);\n\ntests[\"Content-Type is present \" + postman.getResponseHeader(\"Content-type\")] = postman.getResponseHeader(\"Content-type\");\n\ntests[\"Status code is 200\"] = responseCode.code === 200;\n\ntests[\"Response contains ID \" + dataOut.id.toString()] = dataOut.id.toString() !== \"\";\n\ntests[\"Response contains HREF\" ] = dataOut.href.toString() !== \"\";\n\npostman.setGlobalVariable(\"ID\", dataOut.id.toString());\n\npostman.setGlobalVariable(\"lastResponse\" + postman.getEnvironmentVariable(\"testName\"), dataOut);\npostman.setGlobalVariable(\"lastRequest\"+ postman.getEnvironmentVariable(\"testName\"), request.data );\n\n\nconsole.log(\"request \" + request);\n\n\ntests[\"Response contains eligibilityDate \" + dataOut.eligibilityDate.toString()] = dataOut.eligibilityDate.toString() !== \"\";\ntests[\"Response contains qualificationState \" + dataOut.qualificationState.toString()] = dataOut.qualificationState.toString() !== \"\";\n\nif( typeof(dataOut.productOfferingQualificationItem) !== 'undefined' && dataOut.productOfferingQualificationItem.length > 0) {\n    var items = dataOut.productOfferingQualificationItem;\n    for(var i = 0; i < items.length; i++) {\n        tests[\"Response contains productOffering \"] = typeof(items[i].productOffering) !== 'undefined';\n        validateProductOffering(items[i].productOffering);\n    }\n}\n\nfunction validateProductOffering(productOffering) {\n    tests[\"productOffering contains id\"+ productOffering.id.toString()] = productOffering.id.toString() !== \"\";\n    tests[\"productOffering contains href\"+ productOffering.href.toString()] = productOffering.href.toString() !== \"\";\n    tests[\"productOffering contains category \"] = typeof(productOffering.productOfferingCategory) !== 'undefined';\n    tests[\"productOffering contains product \"] = typeof(productOffering.product) !== 'undefined';\n    validateProduct(productOffering.product);\n}\n\nfunction validateProduct(product) {\n    tests[\"product contains productSpecification \"] = typeof(product.productSpecification) !== 'undefined';   \n    tests[\"productSpecification contains id\"+ product.productSpecification.id.toString()] = product.productSpecification.id.toString() !== \"\";\n    tests[\"productSpecification contains version\"+ product.productSpecification.version.toString()] = product.productSpecification.version.toString() !== \"\";\n    tests[\"productSpecification contains name\"+ product.productSpecification.name.toString()] = product.productSpecification.name.toString() !== \"\";\n}",
+                "currentHelper": "normal",
+                "helperAttributes": {},
+                "time": 1467781845810,
+                "name": "find specified product offering qualification request",
+                "description": "",
+                "collectionId": "8e1c651a-2496-f1b9-a1f8-991de65f37d8",
+                "responses": []
+            },
+            {
+                "id": "2dc93626-f8ac-808a-eeda-8f083bdee8db",
+                "headers": "Content-Type: application/json\nAccept: application/json\n",
+                "url": "{{serviceQualificationManagementApi}}/serviceQualification/{{ID2}}",
+                "preRequestScript": "postman.setEnvironmentVariable(\"testName\",  \"tmf-service-qualification-004\");",
+                "pathVariables": {},
+                "method": "GET",
+                "data": null,
+                "dataMode": "params",
+                "tests": "var dataOut = JSON.parse(responseBody);\n\n\nvar lastRequest = globals[\"lastRequest\"+postman.getEnvironmentVariable(\"testName\")];\n\nvar lastResponse= globals[\"lastResponse\"+postman.getEnvironmentVariable(\"testName\")];\n\ntests[\"Content-Type is present \" + postman.getResponseHeader(\"Content-type\")] = postman.getResponseHeader(\"Content-type\");\n\ntests[\"Status code is 200\"] = responseCode.code === 200;\n\ntests[\"Response contains ID \" + dataOut.id.toString()] = dataOut.id.toString() !== \"\";\n\ntests[\"Response contains HREF\" ] = dataOut.href.toString() !== \"\";\n\nconsole.log(\"request \" + request);\n\nif( typeof(dataOut.serviceQualificationItem) !== 'undefined' && dataOut.serviceQualificationItem.length > 0) {\n    var items = dataOut.serviceQualificationItem;\n    for(var i = 0; i < items.length; i++) {\n        tests[\"Response contains service \"] = typeof(items[i].service) !== 'undefined';\n        validateService(items[i].service);\n        \n        tests[\"Response serviceQualificationItem contains availability\"+ items[i].availability.toString()] = items[i].availability.toString() !== \"\";\n        tests[\"Response serviceQualificationItem contains serviceabilityDate\"+ items[i].serviceabilityDate.toString()] = items[i].serviceabilityDate.toString() !== \"\";\n        validate(items[i].service);\n    }\n}\n\nfunction validateService(service) {\n    if(\"No\" === dataOut.provideAlternative) {\n        tests[\"Response service contains serviceCharacteristic \"] = typeof(service.serviceCharacteristic) !== 'undefined';\n        validateServiceCharacteristic(service.serviceCharacteristic);\n    }\n    \n    tests[\"Response service contains serviceSpecification \"] = typeof(service.serviceSpecification) !== 'undefined';\n    validateServiceSpecification(service.serviceSpecification);\n    \n  \n}\n\nfunction validateServiceCharacteristic(serviceCharacteristic) {\n    for(var i = 0; i < serviceCharacteristic.length; i++ ) {\n        tests[\"Response serviceCharacteristic contains name \"+ serviceCharacteristic[i].name] = true;\n        tests[\"Response serviceCharacteristic contains value \"+ serviceCharacteristic[i].value] = true;\n    }\n   \n}\n\nfunction validateServiceSpecification(serviceSpecification) {\n    tests[\"Response serviceSpecification contains id \"+ serviceSpecification.id.toString()] =serviceSpecification.id.toString() !== \"\";\n    tests[\"Response serviceSpecification contains href \"+ serviceSpecification.href.toString()] = serviceSpecification.href.toString() !== \"\";\n    tests[\"Response serviceSpecification contains serviceCategoryId \"+ serviceSpecification.serviceCategoryId.toString()] = serviceSpecification.serviceCategoryId.toString() !== \"\";\n}\n\ntests[\"Response contains eligibilityDate \" + dataOut.eligibilityDate.toString()] = dataOut.eligibilityDate.toString() !== \"\";\n\n\nfunction validate(outService) {\n    \n    if( typeof(dataOut.provideAlternative) !== 'undefined' ) {\n        \n        if(\"No\" === dataOut.provideAlternative && outService.serviceSpecification.serviceCategoryId === \"internetService\") {\n            tests[\"Serivce qualification\"] = internetServiceQualification(outService.serviceCharacteristic, outService.serviceSpecification.serviceSpecificationCharacteristic);\n        }\n    }\n\n}\n\nfunction internetServiceQualification(inAttrs, outAttrs) {\n    \n    for(var i = 0; i < inAttrs.length; i++) {\n        for(var j = 0; j < outAttrs.length; j++) {\n            if(inAttrs[i].name == outAttrs[j].name) {\n                \n                // tests[\"inAttrs: \" + JSON.stringify(inAttrs[i])] = true;\n                // tests[\"outAttrs: \" + JSON.stringify(outAttrs[j])] = true;\n\n                retIn  = convertDataUnit(inAttrs[i].value);\n                retOut = convertDataUnit(outAttrs[j].valueto);\n                \n                // tests[\"retIn: \" + JSON.stringify(retIn)] = true;\n                // tests[\"retOut: \" + JSON.stringify(retOut)] = true;\n                \n                if(retIn.value <= retOut.value) {\n                    return true;\n                }\n            }\n        }\n    }\n    return false;\n \n}\n\nfunction convertDataUnit(dataStr) {\n    // tests[\"dataStr:\" + dataStr] = true;\n    var data = {};\n    data.unit = \"KBPS\";\n    \n    unit = dataStr.substr(-4, 4);\n    value = dataStr.substr(0, dataStr.length-4);\n    //tests[\"unit: \" + unit.toString() + \",value:\" + value.toString() + \",data:\" + dataStr.toString()] = true;\n    if(unit.substr(0,1) === \"K\") {\n        data.value = parseInt(value);\n    } else if(unit.substr(0,1) === \"M\") {\n        data.value = parseInt(value) * 1000;\n    } else if(unit.substr(0,1) === \"G\") {\n        data.value = parseInt(value) * 1000 * 1000;\n    }\n    return data;\n}\n\n\nfunction objectEquals(v1, v2) {\n\n    if (typeof(v1) !== typeof(v2)) {\n         console.log(\"property typeof(v1) !==typeof(v2)\" + typeof(v1)  + typeof(v2) + \"==>\" + v1 + \"!=\" + v2);\n        return false;\n    }\n\n    if (typeof(v1) === \"function\") {\n        return v1.toString() === v2.toString();\n    }\n\n    if (v1 instanceof Object && v2 instanceof Object) {\n       \n        var r = true;\n        for (var k in v1) {\n            r = objectEquals(v1[k], v2[k]);\n            \n            if (!r) {\n                 tests[\"property \" + k.toString() + \"==>\" + v1[k] + \"!=\" + v2[k]] = false;\n                 console.log(\"property \" + k.toString() + \"==>\" + v1[k] + \"!=\" + v2[k]);\n                 postman.setGlobalVariable(\"unequal\" +  k.toString(), v1[k] + \"!=\" + v2[k]);\n                \n                return false;\n            } else {\n                 //tests[\"property \" + k.toString() + \"==>\" + v1[k] + \"=\" + v2[k]] = true;\n            }\n        }\n        return true;\n    } else {\n        return v1 === v2;\n    }\n}",
+                "currentHelper": "normal",
+                "helperAttributes": {},
+                "time": 1467781822098,
+                "name": "find specified service qualification requests - case 2",
+                "description": "",
+                "collectionId": "8e1c651a-2496-f1b9-a1f8-991de65f37d8",
+                "responses": []
+            },
+            {
+                "id": "3859548e-af13-549b-2313-cace98a058ef",
+                "headers": "Content-Type: application/json\nAccept: application/json\n",
+                "url": "{{serviceQualificationManagementApi}}/serviceQualification/{{ID3}}",
+                "preRequestScript": "postman.setEnvironmentVariable(\"testName\",  \"tmf-service-qualification-004\");",
+                "pathVariables": {},
+                "method": "GET",
+                "data": null,
+                "dataMode": "params",
+                "tests": "var dataOut = JSON.parse(responseBody);\n\n\nvar lastRequest = globals[\"lastRequest\"+postman.getEnvironmentVariable(\"testName\")];\n\nvar lastResponse= globals[\"lastResponse\"+postman.getEnvironmentVariable(\"testName\")];\n\ntests[\"Content-Type is present \" + postman.getResponseHeader(\"Content-type\")] = postman.getResponseHeader(\"Content-type\");\n\ntests[\"Status code is 200\"] = responseCode.code === 200;\n\ntests[\"Response contains ID \" + dataOut.id.toString()] = dataOut.id.toString() !== \"\";\n\ntests[\"Response contains HREF\" ] = dataOut.href.toString() !== \"\";\n\nconsole.log(\"request \" + request);\n\nif( typeof(dataOut.serviceQualificationItem) !== 'undefined' && dataOut.serviceQualificationItem.length > 0) {\n    var items = dataOut.serviceQualificationItem;\n    for(var i = 0; i < items.length; i++) {\n        tests[\"Response contains service \"] = typeof(items[i].service) !== 'undefined';\n        validateService(items[i].service);\n        \n        tests[\"Response serviceQualificationItem contains availability\"+ items[i].availability.toString()] = items[i].availability.toString() !== \"\";\n        tests[\"Response serviceQualificationItem contains serviceabilityDate\"+ items[i].serviceabilityDate.toString()] = items[i].serviceabilityDate.toString() !== \"\";\n        validate(items[i].service);\n    }\n}\n\nfunction validateService(service) {\n    if(\"No\" === dataOut.provideAlternative) {\n        tests[\"Response service contains serviceCharacteristic \"] = typeof(service.serviceCharacteristic) !== 'undefined';\n        validateServiceCharacteristic(service.serviceCharacteristic);\n    }\n    \n    tests[\"Response service contains serviceSpecification \"] = typeof(service.serviceSpecification) !== 'undefined';\n    validateServiceSpecification(service.serviceSpecification);\n    \n  \n}\n\nfunction validateServiceCharacteristic(serviceCharacteristic) {\n    for(var i = 0; i < serviceCharacteristic.length; i++ ) {\n        tests[\"Response serviceCharacteristic contains name \"+ serviceCharacteristic[i].name] = true;\n        tests[\"Response serviceCharacteristic contains value \"+ serviceCharacteristic[i].value] = true;\n    }\n   \n}\n\nfunction validateServiceSpecification(serviceSpecification) {\n    tests[\"Response serviceSpecification contains id \"+ serviceSpecification.id.toString()] =serviceSpecification.id.toString() !== \"\";\n    tests[\"Response serviceSpecification contains href \"+ serviceSpecification.href.toString()] = serviceSpecification.href.toString() !== \"\";\n    tests[\"Response serviceSpecification contains serviceCategoryId \"+ serviceSpecification.serviceCategoryId.toString()] = serviceSpecification.serviceCategoryId.toString() !== \"\";\n}\n\ntests[\"Response contains eligibilityDate \" + dataOut.eligibilityDate.toString()] = dataOut.eligibilityDate.toString() !== \"\";\n\n\nfunction validate(outService) {\n    \n    if( typeof(dataOut.provideAlternative) !== 'undefined' ) {\n        \n        if(\"No\" === dataOut.provideAlternative && outService.serviceSpecification.serviceCategoryId === \"internetService\") {\n            tests[\"Serivce qualification\"] = internetServiceQualification(outService.serviceCharacteristic, outService.serviceSpecification.serviceSpecificationCharacteristic);\n        }\n    }\n\n}\n\nfunction internetServiceQualification(inAttrs, outAttrs) {\n    \n    for(var i = 0; i < inAttrs.length; i++) {\n        for(var j = 0; j < outAttrs.length; j++) {\n            if(inAttrs[i].name == outAttrs[j].name) {\n                \n                // tests[\"inAttrs: \" + JSON.stringify(inAttrs[i])] = true;\n                // tests[\"outAttrs: \" + JSON.stringify(outAttrs[j])] = true;\n\n                retIn  = convertDataUnit(inAttrs[i].value);\n                retOut = convertDataUnit(outAttrs[j].valueto);\n                \n                // tests[\"retIn: \" + JSON.stringify(retIn)] = true;\n                // tests[\"retOut: \" + JSON.stringify(retOut)] = true;\n                \n                if(retIn.value <= retOut.value) {\n                    return true;\n                }\n            }\n        }\n    }\n    return false;\n \n}\n\nfunction convertDataUnit(dataStr) {\n    // tests[\"dataStr:\" + dataStr] = true;\n    var data = {};\n    data.unit = \"KBPS\";\n    \n    unit = dataStr.substr(-4, 4);\n    value = dataStr.substr(0, dataStr.length-4);\n    //tests[\"unit: \" + unit.toString() + \",value:\" + value.toString() + \",data:\" + dataStr.toString()] = true;\n    if(unit.substr(0,1) === \"K\") {\n        data.value = parseInt(value);\n    } else if(unit.substr(0,1) === \"M\") {\n        data.value = parseInt(value) * 1000;\n    } else if(unit.substr(0,1) === \"G\") {\n        data.value = parseInt(value) * 1000 * 1000;\n    }\n    return data;\n}\n\n\nfunction objectEquals(v1, v2) {\n\n    if (typeof(v1) !== typeof(v2)) {\n         console.log(\"property typeof(v1) !==typeof(v2)\" + typeof(v1)  + typeof(v2) + \"==>\" + v1 + \"!=\" + v2);\n        return false;\n    }\n\n    if (typeof(v1) === \"function\") {\n        return v1.toString() === v2.toString();\n    }\n\n    if (v1 instanceof Object && v2 instanceof Object) {\n       \n        var r = true;\n        for (var k in v1) {\n            r = objectEquals(v1[k], v2[k]);\n            \n            if (!r) {\n                 tests[\"property \" + k.toString() + \"==>\" + v1[k] + \"!=\" + v2[k]] = false;\n                 console.log(\"property \" + k.toString() + \"==>\" + v1[k] + \"!=\" + v2[k]);\n                 postman.setGlobalVariable(\"unequal\" +  k.toString(), v1[k] + \"!=\" + v2[k]);\n                \n                return false;\n            } else {\n                 //tests[\"property \" + k.toString() + \"==>\" + v1[k] + \"=\" + v2[k]] = true;\n            }\n        }\n        return true;\n    } else {\n        return v1 === v2;\n    }\n}",
+                "currentHelper": "normal",
+                "helperAttributes": {},
+                "time": 1467781830921,
+                "name": "find specified service qualification requests - case 3",
+                "description": "",
+                "collectionId": "8e1c651a-2496-f1b9-a1f8-991de65f37d8",
+                "responses": []
+            },
+            {
+                "id": "677094aa-1cc3-1dc1-fcde-da1568577186",
+                "headers": "Content-Type: application/json\nAccept: application/json\n",
+                "url": "{{serviceQualificationManagementApi}}/serviceQualification",
+                "preRequestScript": "postman.setEnvironmentVariable(\"testName\",  \"tmf-service-qualification-001\");",
+                "pathVariables": {},
+                "method": "POST",
+                "data": [],
+                "dataMode": "raw",
+                "tests": "var dataOut = JSON.parse(responseBody);\n\ntests[\"Content-Type is present \" + postman.getResponseHeader(\"Content-type\")] = postman.getResponseHeader(\"Content-type\");\n\ntests[\"Status code is 201\"] = responseCode.code === 201;\n\ntests[\"Response contains ID \" + dataOut.id.toString()] = dataOut.id.toString() !== \"\";\n\ntests[\"Response contains HREF\" ] = dataOut.href.toString() !== \"\";\n\npostman.setGlobalVariable(\"ID1\", dataOut.id.toString());\n\npostman.setGlobalVariable(\"lastResponse\" + postman.getEnvironmentVariable(\"testName\"), dataOut);\npostman.setGlobalVariable(\"lastRequest\"+ postman.getEnvironmentVariable(\"testName\"), request.data );\n\nvar dataIn = JSON.parse(request.data);\n\n\nconsole.log(\"request \" + dataIn);\nconsole.log(\"request type\" + typeof(dataIn));\n\nif( typeof(dataOut.serviceQualificationItem) !== 'undefined' && dataOut.serviceQualificationItem.length > 0) {\n    var items = dataOut.serviceQualificationItem;\n    for(var i = 0; i < items.length; i++) {\n        tests[\"Response contains service \"] = typeof(items[i].service) !== 'undefined';\n        validateService(items[i].service);\n        \n        tests[\"Response serviceQualificationItem contains availability\"+ items[i].availability.toString()] = items[i].availability.toString() !== \"\";\n        tests[\"Response serviceQualificationItem contains serviceabilityDate \"+ items[i].serviceabilityDate.toString()] = items[i].serviceabilityDate.toString() !== \"\";\n        validate(dataIn.serviceQualificationItem[0].service, items[i].service);\n    }\n}\n\nfunction validateService(service) {\n    if(\"No\" === dataIn.provideAlternative) {\n        tests[\"Response service contains serviceCharacteristic \"] = typeof(service.serviceCharacteristic) !== 'undefined';\n        validateServiceCharacteristic(service.serviceCharacteristic);\n    }\n    \n    tests[\"Response service contains serviceSpecification \"] = typeof(service.serviceSpecification) !== 'undefined';\n    validateServiceSpecification(service.serviceSpecification);\n    \n  \n}\n\nfunction validateServiceCharacteristic(serviceCharacteristic) {\n    for(var i = 0; i < serviceCharacteristic.length; i++ ) {\n        tests[\"Response serviceCharacteristic contains name \"+ serviceCharacteristic[i].name] = true;\n        tests[\"Response serviceCharacteristic contains value \"+ serviceCharacteristic[i].value] = true;\n    }\n   \n}\n\nfunction validateServiceSpecification(serviceSpecification) {\n    tests[\"Response serviceSpecification contains id \"+ serviceSpecification.id.toString()] =serviceSpecification.id.toString() !== \"\";\n    tests[\"Response serviceSpecification contains href \"+ serviceSpecification.href.toString()] = serviceSpecification.href.toString() !== \"\";\n    tests[\"Response serviceSpecification contains serviceCategoryId \"+ serviceSpecification.serviceCategoryId.toString()] = serviceSpecification.serviceCategoryId.toString() !== \"\";\n}\n\n\ntests[\"POST Body Response provideAlternative equals Request provideAlternative\"  ] = objectEquals(dataIn.provideAlternative, dataOut.provideAlternative);\ntests[\"POST Body Response provideOnlyEligible equals Request provideOnlyEligible\"  ] = objectEquals(dataIn.provideOnlyEligible, dataOut.provideOnlyEligible);\ntests[\"POST Body Response Address equals Request Address\"  ] = objectEquals(dataIn.address, dataOut.address);\ntests[\"Response contains eligibilityDate \" + dataOut.eligibilityDate.toString()] = dataOut.eligibilityDate.toString() !== \"\";\n\n\nfunction validate(inService, outService) {\n        \n    tests[\"POST Body Response serviceSpecification equals Request serviceSpecification\"  ] = objectEquals(inService.serviceCharacteristic, outService.serviceCharacteristic);\n    \n    if( typeof(dataIn.provideAlternative && inService.serviceSpecification) !== 'undefined' ) {\n        tests[\"POST Body Response serviceSpecification equals Request serviceSpecification\"  ] = objectEquals(inService.serviceSpecification, outService.serviceSpecification);\n        \n        if(\"No\" === dataIn.provideAlternative && inService.serviceSpecification.serviceCategoryId === \"internetService\") {\n            tests[\"Serivce qualification\"] = internetServiceQualification(inService.serviceCharacteristic, outService.serviceSpecification.serviceSpecificationCharacteristic);\n        }\n    }\n\n}\n\nfunction internetServiceQualification(inAttrs, outAttrs) {\n    // tests[\"inAttrs: \" + JSON.stringify(inAttrs)] = true;\n    \n    // tests[\" outAttrs: \" + JSON.stringify(outAttrs) ] = true;\n    \n    // tests[\"dataIn.provideAlternative: \" + dataIn.provideAlternative] = true;\n    \n    if( dataIn.provideAlternative === \"No\") {\n        \n        for(var i = 0; i < inAttrs.length; i++) {\n            for(var j = 0; j < outAttrs.length; j++) {\n                if(inAttrs[i].name == outAttrs[j].name) {\n                    \n                    // tests[\"inAttrs: \" + JSON.stringify(inAttrs[i])] = true;\n                    // tests[\"outAttrs: \" + JSON.stringify(outAttrs[j])] = true;\n\n                    retIn  = convertDataUnit(inAttrs[i].value);\n                    retOut = convertDataUnit(outAttrs[j].valueto);\n                    \n                    // tests[\"retIn: \" + JSON.stringify(retIn)] = true;\n                    // tests[\"retOut: \" + JSON.stringify(retOut)] = true;\n                    \n                    if(retIn.value <= retOut.value) {\n                        return true;\n                    }\n                }\n            }\n        }\n        return false;\n    }\n    return true;\n}\n\nfunction convertDataUnit(dataStr) {\n    // tests[\"dataStr:\" + dataStr] = true;\n    var data = {};\n    data.unit = \"KBPS\";\n    \n    unit = dataStr.substr(-4, 4);\n    value = dataStr.substr(0, dataStr.length-4);\n    //tests[\"unit: \" + unit.toString() + \",value:\" + value.toString() + \",data:\" + dataStr.toString()] = true;\n    if(unit.substr(0,1) === \"K\") {\n        data.value = parseInt(value);\n    } else if(unit.substr(0,1) === \"M\") {\n        data.value = parseInt(value) * 1000;\n    } else if(unit.substr(0,1) === \"G\") {\n        data.value = parseInt(value) * 1000 * 1000;\n    }\n    return data;\n}\n\n\nfunction objectEquals(v1, v2) {\n\n    if (typeof(v1) !== typeof(v2)) {\n         console.log(\"property typeof(v1) !==typeof(v2)\" + typeof(v1)  + typeof(v2) + \"==>\" + v1 + \"!=\" + v2);\n        return false;\n    }\n\n    if (typeof(v1) === \"function\") {\n        return v1.toString() === v2.toString();\n    }\n\n    if (v1 instanceof Object && v2 instanceof Object) {\n       \n        var r = true;\n        for (var k in v1) {\n            r = objectEquals(v1[k], v2[k]);\n            \n            if (!r) {\n                 tests[\"property \" + k.toString() + \"==>\" + v1[k] + \"!=\" + v2[k]] = false;\n                 console.log(\"property \" + k.toString() + \"==>\" + v1[k] + \"!=\" + v2[k]);\n                 postman.setGlobalVariable(\"unequal\" +  k.toString(), v1[k] + \"!=\" + v2[k]);\n                \n                return false;\n            } else {\n                 //tests[\"property \" + k.toString() + \"==>\" + v1[k] + \"=\" + v2[k]] = true;\n            }\n        }\n        return true;\n    } else {\n        return v1 === v2;\n    }\n}\n",
+                "currentHelper": "normal",
+                "helperAttributes": {},
+                "time": 1467782156329,
+                "name": "create a service qualification request - case 1",
+                "description": "Can a service  be provided at a specific location with the specified characteristics?",
+                "collectionId": "8e1c651a-2496-f1b9-a1f8-991de65f37d8",
+                "responses": [],
+                "rawModeData": "{\n    \"address\" : \n    {\n         \"href\" : \"https://www.google.ca/maps/dir/google+map+montreal+place+ville+marie\"\n     },\n     \"provideAlternative\" : \"No\",\n     \"provideOnlyEligible\" : \"Yes\",\n     \"description\" : \"example of a qualification task\",\n     \"serviceQualificationItem\" : \n     [\n        {\n            \"service\" : {\n                \"serviceCharacteristic\" : [{\n                    \"name\" : \"upstreamSpeed\",\n                    \"value\" : \"1MBPS\"\n                }],\n                \"serviceSpecification\" : {\n                    \"id\" : \"ADSL\",\n                    \"href\" : \"http://localhost:8080/DSServiceSpecficationManagement/api/serviceSepcification/v1/ADSL\",\n                    \"serviceCategoryId\" : \"internetService\"\n                }\n            }\n        }\n     ]\n}\n"
+            },
+            {
+                "id": "9a523a45-7b7c-9c80-0448-7c5cc43fdedd",
+                "headers": "Content-Type: application/json\nAccept: application/json\n",
+                "url": "{{serviceQualificationManagementApi}}/serviceQualification/{{ID1}}",
+                "preRequestScript": "postman.setEnvironmentVariable(\"testName\",  \"tmf-service-qualification-004\");",
+                "pathVariables": {},
+                "method": "GET",
+                "data": null,
+                "dataMode": "params",
+                "tests": "var dataOut = JSON.parse(responseBody);\n\n\nvar lastRequest = globals[\"lastRequest\"+postman.getEnvironmentVariable(\"testName\")];\n\nvar lastResponse= globals[\"lastResponse\"+postman.getEnvironmentVariable(\"testName\")];\n\ntests[\"Content-Type is present \" + postman.getResponseHeader(\"Content-type\")] = postman.getResponseHeader(\"Content-type\");\n\ntests[\"Status code is 200\"] = responseCode.code === 200;\n\ntests[\"Response contains ID \" + dataOut.id.toString()] = dataOut.id.toString() !== \"\";\n\ntests[\"Response contains HREF\" ] = dataOut.href.toString() !== \"\";\n\nconsole.log(\"request \" + request);\n\nif( typeof(dataOut.serviceQualificationItem) !== 'undefined' && dataOut.serviceQualificationItem.length > 0) {\n    var items = dataOut.serviceQualificationItem;\n    for(var i = 0; i < items.length; i++) {\n        tests[\"Response contains service \"] = typeof(items[i].service) !== 'undefined';\n        validateService(items[i].service);\n        \n        tests[\"Response serviceQualificationItem contains availability\"+ items[i].availability.toString()] = items[i].availability.toString() !== \"\";\n        tests[\"Response serviceQualificationItem contains serviceabilityDate\"+ items[i].serviceabilityDate.toString()] = items[i].serviceabilityDate.toString() !== \"\";\n        validate(items[i].service);\n    }\n}\n\nfunction validateService(service) {\n    if(\"No\" === dataOut.provideAlternative) {\n        tests[\"Response service contains serviceCharacteristic \"] = typeof(service.serviceCharacteristic) !== 'undefined';\n        validateServiceCharacteristic(service.serviceCharacteristic);\n    }\n    \n    tests[\"Response service contains serviceSpecification \"] = typeof(service.serviceSpecification) !== 'undefined';\n    validateServiceSpecification(service.serviceSpecification);\n    \n  \n}\n\nfunction validateServiceCharacteristic(serviceCharacteristic) {\n    for(var i = 0; i < serviceCharacteristic.length; i++ ) {\n        tests[\"Response serviceCharacteristic contains name \"+ serviceCharacteristic[i].name] = true;\n        tests[\"Response serviceCharacteristic contains value \"+ serviceCharacteristic[i].value] = true;\n    }\n   \n}\n\nfunction validateServiceSpecification(serviceSpecification) {\n    tests[\"Response serviceSpecification contains id \"+ serviceSpecification.id.toString()] =serviceSpecification.id.toString() !== \"\";\n    tests[\"Response serviceSpecification contains href \"+ serviceSpecification.href.toString()] = serviceSpecification.href.toString() !== \"\";\n    tests[\"Response serviceSpecification contains serviceCategoryId \"+ serviceSpecification.serviceCategoryId.toString()] = serviceSpecification.serviceCategoryId.toString() !== \"\";\n}\n\ntests[\"Response contains eligibilityDate \" + dataOut.eligibilityDate.toString()] = dataOut.eligibilityDate.toString() !== \"\";\n\n\nfunction validate(outService) {\n    \n    if( typeof(dataOut.provideAlternative) !== 'undefined' ) {\n        \n        if(\"No\" === dataOut.provideAlternative && outService.serviceSpecification.serviceCategoryId === \"internetService\") {\n            tests[\"Serivce qualification\"] = internetServiceQualification(outService.serviceCharacteristic, outService.serviceSpecification.serviceSpecificationCharacteristic);\n        }\n    }\n\n}\n\nfunction internetServiceQualification(inAttrs, outAttrs) {\n    \n    for(var i = 0; i < inAttrs.length; i++) {\n        for(var j = 0; j < outAttrs.length; j++) {\n            if(inAttrs[i].name == outAttrs[j].name) {\n                \n                // tests[\"inAttrs: \" + JSON.stringify(inAttrs[i])] = true;\n                // tests[\"outAttrs: \" + JSON.stringify(outAttrs[j])] = true;\n\n                retIn  = convertDataUnit(inAttrs[i].value);\n                retOut = convertDataUnit(outAttrs[j].valueto);\n                \n                // tests[\"retIn: \" + JSON.stringify(retIn)] = true;\n                // tests[\"retOut: \" + JSON.stringify(retOut)] = true;\n                \n                if(retIn.value <= retOut.value) {\n                    return true;\n                }\n            }\n        }\n    }\n    return false;\n \n}\n\nfunction convertDataUnit(dataStr) {\n    // tests[\"dataStr:\" + dataStr] = true;\n    var data = {};\n    data.unit = \"KBPS\";\n    \n    unit = dataStr.substr(-4, 4);\n    value = dataStr.substr(0, dataStr.length-4);\n    //tests[\"unit: \" + unit.toString() + \",value:\" + value.toString() + \",data:\" + dataStr.toString()] = true;\n    if(unit.substr(0,1) === \"K\") {\n        data.value = parseInt(value);\n    } else if(unit.substr(0,1) === \"M\") {\n        data.value = parseInt(value) * 1000;\n    } else if(unit.substr(0,1) === \"G\") {\n        data.value = parseInt(value) * 1000 * 1000;\n    }\n    return data;\n}\n\n\nfunction objectEquals(v1, v2) {\n\n    if (typeof(v1) !== typeof(v2)) {\n         console.log(\"property typeof(v1) !==typeof(v2)\" + typeof(v1)  + typeof(v2) + \"==>\" + v1 + \"!=\" + v2);\n        return false;\n    }\n\n    if (typeof(v1) === \"function\") {\n        return v1.toString() === v2.toString();\n    }\n\n    if (v1 instanceof Object && v2 instanceof Object) {\n       \n        var r = true;\n        for (var k in v1) {\n            r = objectEquals(v1[k], v2[k]);\n            \n            if (!r) {\n                 tests[\"property \" + k.toString() + \"==>\" + v1[k] + \"!=\" + v2[k]] = false;\n                 console.log(\"property \" + k.toString() + \"==>\" + v1[k] + \"!=\" + v2[k]);\n                 postman.setGlobalVariable(\"unequal\" +  k.toString(), v1[k] + \"!=\" + v2[k]);\n                \n                return false;\n            } else {\n                 //tests[\"property \" + k.toString() + \"==>\" + v1[k] + \"=\" + v2[k]] = true;\n            }\n        }\n        return true;\n    } else {\n        return v1 === v2;\n    }\n}",
+                "currentHelper": "normal",
+                "helperAttributes": {},
+                "time": 1467781810469,
+                "name": "find specified service qualification requests - case 1",
+                "description": "",
+                "collectionId": "8e1c651a-2496-f1b9-a1f8-991de65f37d8",
+                "responses": []
+            },
+            {
+                "id": "bb91270e-ca48-3134-62e7-3465d3f68e82",
+                "headers": "Content-Type: application/json\nAccept: application/json\n",
+                "url": "{{serviceQualificationManagementApi}}/productOfferingQualification",
+                "preRequestScript": "postman.setEnvironmentVariable(\"testName\",  \"tmf-product-offering-qualification-001\");",
+                "pathVariables": {},
+                "method": "POST",
+                "data": [],
+                "dataMode": "raw",
+                "version": 2,
+                "tests": "var dataOut = JSON.parse(responseBody);\n\ntests[\"Content-Type is present \" + postman.getResponseHeader(\"Content-type\")] = postman.getResponseHeader(\"Content-type\");\n\ntests[\"Status code is 201\"] = responseCode.code === 201;\n\ntests[\"Response contains ID \" + dataOut.id.toString()] = dataOut.id.toString() !== \"\";\n\ntests[\"Response contains HREF\" ] = dataOut.href.toString() !== \"\";\n\npostman.setGlobalVariable(\"ID4\", dataOut.id.toString());\n\npostman.setGlobalVariable(\"lastResponse\" + postman.getEnvironmentVariable(\"testName\"), dataOut);\npostman.setGlobalVariable(\"lastRequest\"+ postman.getEnvironmentVariable(\"testName\"), request.data );\n\nvar dataIn = JSON.parse(request.data);\n\n\nconsole.log(\"request \" + dataIn);\nconsole.log(\"request type\" + typeof(dataIn));\n\ntests[\"POST Body Response provideAlternative equals Request provideAlternative\"  ] = objectEquals(dataIn.provideOnlyAvailable, dataOut.provideOnlyAvailable);\ntests[\"POST Body Response provideOnlyEligible equals Request provideOnlyEligible\"  ] = objectEquals(dataIn.provideUnavailabilityReason, dataOut.provideUnavailabilityReason);\ntests[\"Response contains eligibilityDate \" + dataOut.eligibilityDate.toString()] = dataOut.eligibilityDate.toString() !== \"\";\ntests[\"Response contains qualificationState \" + dataOut.eligibilityDate.toString()] = dataOut.qualificationState.toString() !== \"\";\n\nif( typeof(dataOut.productOfferingQualificationItem) !== 'undefined' && dataOut.productOfferingQualificationItem.length > 0) {\n    var items = dataOut.productOfferingQualificationItem;\n    for(var i = 0; i < items.length; i++) {\n        tests[\"Response contains productOffering \"] = typeof(items[i].productOffering) !== 'undefined';\n        validateProductOffering(items[i].productOffering);\n    }\n}\n\nfunction validateProductOffering(productOffering) {\n    tests[\"productOffering contains id\"+ productOffering.id.toString()] = productOffering.id.toString() !== \"\";\n    tests[\"productOffering contains href\"+ productOffering.href.toString()] = productOffering.href.toString() !== \"\";\n    tests[\"productOffering contains category \"] = typeof(productOffering.productOfferingCategory) !== 'undefined';\n    tests[\"productOffering contains product \"] = typeof(productOffering.product) !== 'undefined';\n    validateProduct(productOffering.product);\n}\n\nfunction validateProduct(product) {\n    tests[\"product contains productSpecification \"] = typeof(product.productSpecification) !== 'undefined';   \n    tests[\"productSpecification contains id\"+ product.productSpecification.id.toString()] = product.productSpecification.id.toString() !== \"\";\n    tests[\"productSpecification contains version\"+ product.productSpecification.version.toString()] = product.productSpecification.version.toString() !== \"\";\n    tests[\"productSpecification contains name\"+ product.productSpecification.name.toString()] = product.productSpecification.name.toString() !== \"\";\n}\n\nfunction objectEquals(v1, v2) {\n\n    if (typeof(v1) !== typeof(v2)) {\n         console.log(\"property typeof(v1) !==typeof(v2)\" + typeof(v1)  + typeof(v2) + \"==>\" + v1 + \"!=\" + v2);\n        return false;\n    }\n\n    if (typeof(v1) === \"function\") {\n        return v1.toString() === v2.toString();\n    }\n\n    if (v1 instanceof Object && v2 instanceof Object) {\n       \n        var r = true;\n        for (var k in v1) {\n            r = objectEquals(v1[k], v2[k]);\n            \n            if (!r) {\n                 tests[\"property \" + k.toString() + \"==>\" + v1[k] + \"!=\" + v2[k]] = false;\n                 console.log(\"property \" + k.toString() + \"==>\" + v1[k] + \"!=\" + v2[k]);\n                 postman.setGlobalVariable(\"unequal\" +  k.toString(), v1[k] + \"!=\" + v2[k]);\n                \n                return false;\n            } else {\n                 //tests[\"property \" + k.toString() + \"==>\" + v1[k] + \"=\" + v2[k]] = true;\n            }\n        }\n        return true;\n    } else {\n        return v1 === v2;\n    }\n}\n",
+                "currentHelper": "normal",
+                "helperAttributes": {},
+                "time": 1467781835844,
+                "name": "create a product offering qualification request",
+                "description": "",
+                "collectionId": "8e1c651a-2496-f1b9-a1f8-991de65f37d8",
+                "responses": [],
+                "rawModeData": "{\n     \"provideOnlyAvailable\": \"No\",\n     \"provideUnavailabilityReason\": \"Yes\",\n     \"description\": \"exmple of a qualification task\",\n     \"channel\": \"web store\",\n     \"address\": {\n        \"href\" : \"https://www.google.ca/maps/dir/google+map+montreal+place+ville+marie\"\n     },\n     \"relatedParty\": [\n        {\n            \"href\": \"http://serverlocation:port/partyManagement/customer/345221\",\n            \"role\": \"customer\",\n            \"name\": \"John Doe\"\n        },\n        {\n            \"href\": \"http://serverlocation:port/partnerManagement/partner/4563\",\n            \"role\": \"csp\",\n            \"name\": \"x service provider\"\n        }\n     ],\n     \"productOfferingQualificationItem\": [\n         { \n             \"productOffering\": {\n                 \"productOfferingCategory\": {\n                     \"id\": \"TVservice with Internet Play\"\n                 }\n                 \n             }\n         }\n     ]\n}\n"
+            },
+            {
+                "id": "d8ad8b38-cd79-fa86-d72f-dece365aae58",
+                "headers": "Content-Type: application/json\nAccept: application/json\n",
+                "url": "{{serviceQualificationManagementApi}}/serviceQualification",
+                "preRequestScript": "postman.setEnvironmentVariable(\"testName\",  \"tmf-service-qualification-003\");",
+                "pathVariables": {},
+                "method": "POST",
+                "data": [],
+                "dataMode": "raw",
+                "tests": "var dataOut = JSON.parse(responseBody);\n\ntests[\"Content-Type is present \" + postman.getResponseHeader(\"Content-type\")] = postman.getResponseHeader(\"Content-type\");\n\ntests[\"Status code is 201\"] = responseCode.code === 201;\n\ntests[\"Response contains ID \" + dataOut.id.toString()] = dataOut.id.toString() !== \"\";\n\ntests[\"Response contains HREF\" ] = dataOut.href.toString() !== \"\";\n\npostman.setGlobalVariable(\"ID3\", dataOut.id.toString());\n\npostman.setGlobalVariable(\"lastResponse\" + postman.getEnvironmentVariable(\"testName\"), dataOut);\npostman.setGlobalVariable(\"lastRequest\"+ postman.getEnvironmentVariable(\"testName\"), request.data );\n\nvar dataIn = JSON.parse(request.data);\n\n\nconsole.log(\"request \" + dataIn);\nconsole.log(\"request type\" + typeof(dataIn));\n\nif( typeof(dataOut.serviceQualificationItem) !== 'undefined' && dataOut.serviceQualificationItem.length > 0) {\n    var items = dataOut.serviceQualificationItem;\n    for(var i = 0; i < items.length; i++) {\n        tests[\"Response contains service \"] = typeof(items[i].service) !== 'undefined';\n        validateService(items[i].service);\n        \n        tests[\"Response serviceQualificationItem contains availability\"+ items[i].availability.toString()] = items[i].availability.toString() !== \"\";\n        tests[\"Response serviceQualificationItem contains serviceabilityDate \"+ items[i].serviceabilityDate.toString()] = items[i].serviceabilityDate.toString() !== \"\";\n        validate(dataIn.serviceQualificationItem[0].service, items[i].service);\n    }\n}\n\nfunction validateService(service) {\n    if(\"No\" === dataIn.provideAlternative) {\n        tests[\"Response service contains serviceCharacteristic \"] = typeof(service.serviceCharacteristic) !== 'undefined';\n        validateServiceCharacteristic(service.serviceCharacteristic);\n    }\n    \n    tests[\"Response service contains serviceSpecification \"] = typeof(service.serviceSpecification) !== 'undefined';\n    validateServiceSpecification(service.serviceSpecification);\n    \n  \n}\n\nfunction validateServiceCharacteristic(serviceCharacteristic) {\n    for(var i = 0; i < serviceCharacteristic.length; i++ ) {\n        tests[\"Response serviceCharacteristic contains name \"+ serviceCharacteristic[i].name] = true;\n        tests[\"Response serviceCharacteristic contains value \"+ serviceCharacteristic[i].value] = true;\n    }\n   \n}\n\nfunction validateServiceSpecification(serviceSpecification) {\n    tests[\"Response serviceSpecification contains id \"+ serviceSpecification.id.toString()] =serviceSpecification.id.toString() !== \"\";\n    tests[\"Response serviceSpecification contains href \"+ serviceSpecification.href.toString()] = serviceSpecification.href.toString() !== \"\";\n    tests[\"Response serviceSpecification contains serviceCategoryId \"+ serviceSpecification.serviceCategoryId.toString()] = serviceSpecification.serviceCategoryId.toString() !== \"\";\n}\n\n\ntests[\"POST Body Response provideAlternative equals Request provideAlternative\"  ] = objectEquals(dataIn.provideAlternative, dataOut.provideAlternative);\ntests[\"POST Body Response provideOnlyEligible equals Request provideOnlyEligible\"  ] = objectEquals(dataIn.provideOnlyEligible, dataOut.provideOnlyEligible);\ntests[\"POST Body Response Address equals Request Address\"  ] = objectEquals(dataIn.address, dataOut.address);\ntests[\"Response contains eligibilityDate \" + dataOut.eligibilityDate.toString()] = dataOut.eligibilityDate.toString() !== \"\";\n\n\nfunction validate(inService, outService) {\n        \n    tests[\"POST Body Response serviceSpecification equals Request serviceSpecification\"  ] = objectEquals(inService.serviceCharacteristic, outService.serviceCharacteristic);\n    \n    if( typeof(dataIn.provideAlternative && inService.serviceSpecification) !== 'undefined' ) {\n        tests[\"POST Body Response serviceSpecification equals Request serviceSpecification\"  ] = objectEquals(inService.serviceSpecification, outService.serviceSpecification);\n        \n        if(\"No\" === dataIn.provideAlternative && inService.serviceSpecification.serviceCategoryId === \"internetService\") {\n            tests[\"Serivce qualification\"] = internetServiceQualification(inService.serviceCharacteristic, outService.serviceSpecification.serviceSpecificationCharacteristic);\n        }\n    }\n\n}\n\nfunction internetServiceQualification(inAttrs, outAttrs) {\n    // tests[\"inAttrs: \" + JSON.stringify(inAttrs)] = true;\n    \n    // tests[\" outAttrs: \" + JSON.stringify(outAttrs) ] = true;\n    \n    // tests[\"dataIn.provideAlternative: \" + dataIn.provideAlternative] = true;\n    \n    if( dataIn.provideAlternative === \"No\") {\n        \n        for(var i = 0; i < inAttrs.length; i++) {\n            for(var j = 0; j < outAttrs.length; j++) {\n                if(inAttrs[i].name == outAttrs[j].name) {\n                    \n                    // tests[\"inAttrs: \" + JSON.stringify(inAttrs[i])] = true;\n                    // tests[\"outAttrs: \" + JSON.stringify(outAttrs[j])] = true;\n\n                    retIn  = convertDataUnit(inAttrs[i].value);\n                    retOut = convertDataUnit(outAttrs[j].valueto);\n                    \n                    // tests[\"retIn: \" + JSON.stringify(retIn)] = true;\n                    // tests[\"retOut: \" + JSON.stringify(retOut)] = true;\n                    \n                    if(retIn.value <= retOut.value) {\n                        return true;\n                    }\n                }\n            }\n        }\n        return false;\n    }\n    return true;\n}\n\nfunction convertDataUnit(dataStr) {\n    // tests[\"dataStr:\" + dataStr] = true;\n    var data = {};\n    data.unit = \"KBPS\";\n    \n    unit = dataStr.substr(-4, 4);\n    value = dataStr.substr(0, dataStr.length-4);\n    //tests[\"unit: \" + unit.toString() + \",value:\" + value.toString() + \",data:\" + dataStr.toString()] = true;\n    if(unit.substr(0,1) === \"K\") {\n        data.value = parseInt(value);\n    } else if(unit.substr(0,1) === \"M\") {\n        data.value = parseInt(value) * 1000;\n    } else if(unit.substr(0,1) === \"G\") {\n        data.value = parseInt(value) * 1000 * 1000;\n    }\n    return data;\n}\n\n\nfunction objectEquals(v1, v2) {\n\n    if (typeof(v1) !== typeof(v2)) {\n         console.log(\"property typeof(v1) !==typeof(v2)\" + typeof(v1)  + typeof(v2) + \"==>\" + v1 + \"!=\" + v2);\n        return false;\n    }\n\n    if (typeof(v1) === \"function\") {\n        return v1.toString() === v2.toString();\n    }\n\n    if (v1 instanceof Object && v2 instanceof Object) {\n       \n        var r = true;\n        for (var k in v1) {\n            r = objectEquals(v1[k], v2[k]);\n            \n            if (!r) {\n                 tests[\"property \" + k.toString() + \"==>\" + v1[k] + \"!=\" + v2[k]] = false;\n                 console.log(\"property \" + k.toString() + \"==>\" + v1[k] + \"!=\" + v2[k]);\n                 postman.setGlobalVariable(\"unequal\" +  k.toString(), v1[k] + \"!=\" + v2[k]);\n                \n                return false;\n            } else {\n                 //tests[\"property \" + k.toString() + \"==>\" + v1[k] + \"=\" + v2[k]] = true;\n            }\n        }\n        return true;\n    } else {\n        return v1 === v2;\n    }\n}\n",
+                "currentHelper": "normal",
+                "helperAttributes": {},
+                "time": 1467782168734,
+                "name": "create a service qualification request - case 3",
+                "description": "can the specific service be provided at a specific location (asking for specific characteristrics but not specific service type (no specification isprovided DSL or Fiber)",
+                "collectionId": "8e1c651a-2496-f1b9-a1f8-991de65f37d8",
+                "responses": [],
+                "rawModeData": "{\n    \"address\" : \n    {\n         \"href\" : \"https://www.google.ca/maps/dir/google+map+montreal+place+ville+marie\"\n     },\n     \"provideAlternative\" : \"No\",\n     \"provideOnlyEligible\" : \"Yes\",\n     \"description\" : \"example of a qualification task\",\n     \"serviceQualificationItem\" : \n     [\n        {\n            \"service\" : {\n                \"serviceCharacteristic\" : [{\n                    \"name\" : \"upstreamSpeed\",\n                    \"value\" : \"1MBPS\"\n                },\n                {\n                    \"name\" : \"downstreamSpeed\",\n                    \"value\" : \"100MBPS\"\n                }]\n            }\n        }\n     ]\n}\n"
+            }
+        ]
+    },
+    "folder": null,
+    "globals": {
+        "values": [
+            {
+                "key": "ID1",
+                "value": "766",
+                "type": "text",
+                "name": "ID1"
+            },
+            {
+                "key": "lastResponsetmf-service-qualification-001",
+                "value": {
+                    "address": {
+                        "href": "https://www.google.ca/maps/dir/google+map+montreal+place+ville+marie",
+                        "id": "767"
+                    },
+                    "description": "example of a qualification task",
+                    "eligibilityDate": "2016-07-06T13:17:18.518+08:00",
+                    "href": "http://localhost:8080/DSServiceQualificationManagement/api/v1/serviceQualification/766",
+                    "id": "766",
+                    "interactionDate": "2016-07-06T13:17:18.518+08:00",
+                    "provideAlternative": "No",
+                    "provideOnlyEligible": "Yes",
+                    "qualificationState": "DONE",
+                    "serviceQualificationItem": [
+                        {
+                            "availability": "available",
+                            "service": {
+                                "serviceCharacteristic": [
+                                    {
+                                        "name": "upstreamSpeed",
+                                        "value": "1MBPS"
+                                    }
+                                ],
+                                "serviceSpecification": {
+                                    "hjid": 57,
+                                    "href": "http://localhost:8080/DSServiceSpecficationManagement/api/serviceSepcification/v1/ADSL",
+                                    "id": "ADSL",
+                                    "serviceCategoryId": "internetService",
+                                    "serviceSpecificationCharacteristic": [
+                                        {
+                                            "id": "58",
+                                            "name": "upstreamSpeed",
+                                            "valueFromNumber": 10,
+                                            "valueFromUnit": "KBPS",
+                                            "valueToNumber": 1000,
+                                            "valueToUnit": "KBPS",
+                                            "valuefrom": "10KBPS",
+                                            "valueto": "1MBPS"
+                                        },
+                                        {
+                                            "id": "59",
+                                            "name": "downstreamSpeed",
+                                            "valueFromNumber": 100,
+                                            "valueFromUnit": "KBPS",
+                                            "valueToNumber": 6000,
+                                            "valueToUnit": "KBPS",
+                                            "valuefrom": "100KBPS",
+                                            "valueto": "6MBPS"
+                                        }
+                                    ]
+                                }
+                            },
+                            "serviceabilityDate": "2016-07-06T13:17:18.524+08:00"
+                        }
+                    ]
+                },
+                "type": "text",
+                "name": "lastResponsetmf-service-qualification-001"
+            },
+            {
+                "key": "lastRequesttmf-service-qualification-001",
+                "value": "{\n    \"address\" : \n    {\n         \"href\" : \"https://www.google.ca/maps/dir/google+map+montreal+place+ville+marie\"\n     },\n     \"provideAlternative\" : \"No\",\n     \"provideOnlyEligible\" : \"Yes\",\n     \"description\" : \"example of a qualification task\",\n     \"serviceQualificationItem\" : \n     [\n        {\n            \"service\" : {\n                \"serviceCharacteristic\" : [{\n                    \"name\" : \"upstreamSpeed\",\n                    \"value\" : \"1MBPS\"\n                }],\n                \"serviceSpecification\" : {\n                    \"id\" : \"ADSL\",\n                    \"href\" : \"http://localhost:8080/DSServiceSpecficationManagement/api/serviceSepcification/v1/ADSL\",\n                    \"serviceCategoryId\" : \"internetService\"\n                }\n            }\n        }\n     ]\n}\n",
+                "type": "text",
+                "name": "lastRequesttmf-service-qualification-001"
+            },
+            {
+                "key": "ID2",
+                "value": "773",
+                "type": "text",
+                "name": "ID2"
+            },
+            {
+                "key": "lastResponsetmf-service-qualification-002",
+                "value": {
+                    "address": {
+                        "href": "https://www.google.ca/maps/dir/google+map+montreal+place+ville+marie",
+                        "id": "774"
+                    },
+                    "description": "example of a qualification task",
+                    "eligibilityDate": "2016-07-06T13:17:18.818+08:00",
+                    "href": "http://localhost:8080/DSServiceQualificationManagement/api/v1/serviceQualification/773",
+                    "id": "773",
+                    "interactionDate": "2016-07-06T13:17:18.818+08:00",
+                    "provideAlternative": "Yes",
+                    "provideOnlyEligible": "Yes",
+                    "qualificationState": "DONE",
+                    "serviceQualificationItem": [
+                        {
+                            "alternativeService": [
+                                {
+                                    "serviceCharacteristic": [
+                                        {
+                                            "name": "upstreamSpeed",
+                                            "value": "1MBPS"
+                                        }
+                                    ],
+                                    "serviceSpecification": {
+                                        "hjid": 57,
+                                        "href": "http://localhost:8080/DSServiceSpecficationManagement/api/serviceSepcification/v1/ADSL",
+                                        "id": "ADSL",
+                                        "serviceCategoryId": "internetService",
+                                        "serviceSpecificationCharacteristic": [
+                                            {
+                                                "id": "58",
+                                                "name": "upstreamSpeed",
+                                                "valueFromNumber": 10,
+                                                "valueFromUnit": "KBPS",
+                                                "valueToNumber": 1000,
+                                                "valueToUnit": "KBPS",
+                                                "valuefrom": "10KBPS",
+                                                "valueto": "1MBPS"
+                                            },
+                                            {
+                                                "id": "59",
+                                                "name": "downstreamSpeed",
+                                                "valueFromNumber": 100,
+                                                "valueFromUnit": "KBPS",
+                                                "valueToNumber": 6000,
+                                                "valueToUnit": "KBPS",
+                                                "valuefrom": "100KBPS",
+                                                "valueto": "6MBPS"
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "availability": "available-shortfall",
+                            "service": {
+                                "serviceSpecification": {
+                                    "href": "https://serviceSpecification/ADSL",
+                                    "id": "ADSL",
+                                    "serviceCategoryId": "internetService"
+                                }
+                            },
+                            "serviceabilityDate": "2016-07-06T13:17:18.828+08:00"
+                        }
+                    ]
+                },
+                "type": "text",
+                "name": "lastResponsetmf-service-qualification-002"
+            },
+            {
+                "key": "lastRequesttmf-service-qualification-002",
+                "value": "{\n    \"address\" : \n    {\n         \"href\" : \"https://www.google.ca/maps/dir/google+map+montreal+place+ville+marie\"\n     },\n     \"provideAlternative\" : \"Yes\",\n     \"provideOnlyEligible\" : \"Yes\",\n     \"description\" : \"example of a qualification task\",\n     \"serviceQualificationItem\" : \n     [\n        {\n            \"service\" : {\n                \"serviceCharacteristic\" : [{\n                    \"name\" : \"upstreamSpeed\",\n                    \"value\" : \"50MBPS\"\n                }],\n                \"serviceSpecification\" : {\n                    \"id\" : \"ADSL\",\n                    \"href\" : \"https://serviceSpecification/ADSL\",\n                    \"serviceCategoryId\" : \"internetService\"\n                }\n            }\n        }\n     ]\n}\n",
+                "type": "text",
+                "name": "lastRequesttmf-service-qualification-002"
+            },
+            {
+                "key": "ID3",
+                "value": "780",
+                "type": "text",
+                "name": "ID3"
+            },
+            {
+                "key": "lastResponsetmf-service-qualification-003",
+                "value": {
+                    "address": {
+                        "href": "https://www.google.ca/maps/dir/google+map+montreal+place+ville+marie",
+                        "id": "781"
+                    },
+                    "description": "example of a qualification task",
+                    "eligibilityDate": "2016-07-06T13:17:19.118+08:00",
+                    "href": "http://localhost:8080/DSServiceQualificationManagement/api/v1/serviceQualification/780",
+                    "id": "780",
+                    "interactionDate": "2016-07-06T13:17:19.118+08:00",
+                    "provideAlternative": "No",
+                    "provideOnlyEligible": "Yes",
+                    "qualificationState": "DONE",
+                    "serviceQualificationItem": [
+                        {
+                            "availability": "available",
+                            "service": {
+                                "serviceCharacteristic": [
+                                    {
+                                        "name": "upstreamSpeed",
+                                        "value": "1MBPS"
+                                    },
+                                    {
+                                        "name": "downstreamSpeed",
+                                        "value": "100MBPS"
+                                    }
+                                ],
+                                "serviceSpecification": {
+                                    "hjid": 61,
+                                    "href": "http://localhost:8080/DSServiceSpecficationManagement/api/serviceSepcification/v1/Fiber",
+                                    "id": "Fiber",
+                                    "serviceCategoryId": "internetService",
+                                    "serviceSpecificationCharacteristic": [
+                                        {
+                                            "id": "62",
+                                            "name": "upstreamSpeed",
+                                            "valueFromNumber": 1000,
+                                            "valueFromUnit": "KBPS",
+                                            "valueToNumber": 10000,
+                                            "valueToUnit": "KBPS",
+                                            "valuefrom": "1MBPS",
+                                            "valueto": "10MBPS"
+                                        },
+                                        {
+                                            "id": "63",
+                                            "name": "downstreamSpeed",
+                                            "valueFromNumber": 10000,
+                                            "valueFromUnit": "KBPS",
+                                            "valueToNumber": 100000,
+                                            "valueToUnit": "KBPS",
+                                            "valuefrom": "10MBPS",
+                                            "valueto": "100MBPS"
+                                        }
+                                    ]
+                                }
+                            },
+                            "serviceabilityDate": "2016-07-06T13:17:19.124+08:00"
+                        }
+                    ]
+                },
+                "type": "text",
+                "name": "lastResponsetmf-service-qualification-003"
+            },
+            {
+                "key": "lastRequesttmf-service-qualification-003",
+                "value": "{\n    \"address\" : \n    {\n         \"href\" : \"https://www.google.ca/maps/dir/google+map+montreal+place+ville+marie\"\n     },\n     \"provideAlternative\" : \"No\",\n     \"provideOnlyEligible\" : \"Yes\",\n     \"description\" : \"example of a qualification task\",\n     \"serviceQualificationItem\" : \n     [\n        {\n            \"service\" : {\n                \"serviceCharacteristic\" : [{\n                    \"name\" : \"upstreamSpeed\",\n                    \"value\" : \"1MBPS\"\n                },\n                {\n                    \"name\" : \"downstreamSpeed\",\n                    \"value\" : \"100MBPS\"\n                }]\n            }\n        }\n     ]\n}\n",
+                "type": "text",
+                "name": "lastRequesttmf-service-qualification-003"
+            },
+            {
+                "key": "ID4",
+                "value": "788",
+                "type": "text",
+                "name": "ID4"
+            },
+            {
+                "key": "lastResponsetmf-product-offering-qualification-001",
+                "value": {
+                    "address": {
+                        "href": "https://www.google.ca/maps/dir/google+map+montreal+place+ville+marie",
+                        "id": "789"
+                    },
+                    "channel": "web store",
+                    "description": "exmple of a qualification task",
+                    "eligibilityDate": "2016-07-06T13:17:20.076+08:00",
+                    "href": "http://localhost:8080/DSServiceQualificationManagement/api/v1/productOfferingQualification/788",
+                    "id": "788",
+                    "productOfferingQualificationItem": [
+                        {
+                            "hjid": 4,
+                            "orderFeasibilityCheck": {
+                                "eligibilityResult": "available",
+                                "hjid": 787
+                            },
+                            "productOffering": {
+                                "href": "http: //serverlocation:port/catalogManagement/productOffering/42",
+                                "id": "5",
+                                "product": {
+                                    "hjid": 6,
+                                    "productCharacteristic": [
+                                        {
+                                            "id": "8",
+                                            "name": "upstreamspeed",
+                                            "value": "1 MBPS"
+                                        },
+                                        {
+                                            "id": "9",
+                                            "name": "downstreamspeed",
+                                            "value": "6 MBPS"
+                                        }
+                                    ],
+                                    "productSpecification": {
+                                        "id": "7",
+                                        "name": "TVservice with Internet Play",
+                                        "version": "2.0"
+                                    }
+                                },
+                                "productOfferingCategory": {
+                                    "hjid": 10,
+                                    "id": "TVservice with Internet Play"
+                                }
+                            }
+                        }
+                    ],
+                    "provideOnlyAvailable": "No",
+                    "provideUnavailabilityReason": "Yes",
+                    "qualificationState": "DONE",
+                    "relatedParty": [
+                        {
+                            "href": "http://serverlocation:port/partyManagement/customer/345221",
+                            "id": "793",
+                            "name": "John Doe",
+                            "role": "customer"
+                        },
+                        {
+                            "href": "http://serverlocation:port/partnerManagement/partner/4563",
+                            "id": "794",
+                            "name": "x service provider",
+                            "role": "csp"
+                        }
+                    ]
+                },
+                "type": "text",
+                "name": "lastResponsetmf-product-offering-qualification-001"
+            },
+            {
+                "key": "lastRequesttmf-product-offering-qualification-001",
+                "value": "{\n     \"provideOnlyAvailable\": \"No\",\n     \"provideUnavailabilityReason\": \"Yes\",\n     \"description\": \"exmple of a qualification task\",\n     \"channel\": \"web store\",\n     \"address\": {\n        \"href\" : \"https://www.google.ca/maps/dir/google+map+montreal+place+ville+marie\"\n     },\n     \"relatedParty\": [\n        {\n            \"href\": \"http://serverlocation:port/partyManagement/customer/345221\",\n            \"role\": \"customer\",\n            \"name\": \"John Doe\"\n        },\n        {\n            \"href\": \"http://serverlocation:port/partnerManagement/partner/4563\",\n            \"role\": \"csp\",\n            \"name\": \"x service provider\"\n        }\n     ],\n     \"productOfferingQualificationItem\": [\n         { \n             \"productOffering\": {\n                 \"productOfferingCategory\": {\n                     \"id\": \"TVservice with Internet Play\"\n                 }\n                 \n             }\n         }\n     ]\n}\n",
+                "type": "text",
+                "name": "lastRequesttmf-product-offering-qualification-001"
+            },
+            {
+                "key": "ID",
+                "value": "788",
+                "type": "text",
+                "name": "ID"
+            },
+            {
+                "key": "lastResponsetmf-product-offering-qualification-002",
+                "value": {
+                    "address": {
+                        "href": "https://www.google.ca/maps/dir/google+map+montreal+place+ville+marie",
+                        "id": "789"
+                    },
+                    "channel": "web store",
+                    "description": "exmple of a qualification task",
+                    "eligibilityDate": "2016-07-06T13:17:20.295+08:00",
+                    "href": "http://localhost:8080/DSServiceQualificationManagement/api/v1/productOfferingQualification/788",
+                    "id": "788",
+                    "productOfferingQualificationItem": [
+                        {
+                            "hjid": 4,
+                            "orderFeasibilityCheck": {
+                                "eligibilityResult": "available",
+                                "hjid": 796
+                            },
+                            "productOffering": {
+                                "href": "http: //serverlocation:port/catalogManagement/productOffering/42",
+                                "id": "5",
+                                "product": {
+                                    "hjid": 6,
+                                    "productCharacteristic": [
+                                        {
+                                            "id": "8",
+                                            "name": "upstreamspeed",
+                                            "value": "1 MBPS"
+                                        },
+                                        {
+                                            "id": "9",
+                                            "name": "downstreamspeed",
+                                            "value": "6 MBPS"
+                                        }
+                                    ],
+                                    "productSpecification": {
+                                        "id": "7",
+                                        "name": "TVservice with Internet Play",
+                                        "version": "2.0"
+                                    }
+                                },
+                                "productOfferingCategory": {
+                                    "hjid": 10,
+                                    "id": "TVservice with Internet Play"
+                                }
+                            }
+                        }
+                    ],
+                    "provideOnlyAvailable": "No",
+                    "provideUnavailabilityReason": "Yes",
+                    "qualificationState": "DONE",
+                    "relatedParty": [
+                        {
+                            "href": "http://serverlocation:port/partyManagement/customer/345221",
+                            "id": "793",
+                            "name": "John Doe",
+                            "role": "customer"
+                        },
+                        {
+                            "href": "http://serverlocation:port/partnerManagement/partner/4563",
+                            "id": "794",
+                            "name": "x service provider",
+                            "role": "csp"
+                        }
+                    ]
+                },
+                "type": "text",
+                "name": "lastResponsetmf-product-offering-qualification-002"
+            },
+            {
+                "key": "lastRequesttmf-product-offering-qualification-002",
+                "value": {},
+                "type": "text",
+                "name": "lastRequesttmf-product-offering-qualification-002"
+            }
+        ]
+    },
+    "results": [
+        {
+            "id": "677094aa-1cc3-1dc1-fcde-da1568577186",
+            "name": "create a service qualification request - case 1",
+            "url": "{{serviceQualificationManagementApi}}/serviceQualification",
+            "totalTime": 427,
+            "responseCode": {
+                "code": 201,
+                "name": "",
+                "detail": ""
+            },
+            "tests": {
+                "Content-Type is present application/json": "application/json",
+                "Status code is 201": true,
+                "Response contains ID 766": true,
+                "Response contains HREF": true,
+                "Response contains service ": true,
+                "Response service contains serviceCharacteristic ": true,
+                "Response serviceCharacteristic contains name upstreamSpeed": true,
+                "Response serviceCharacteristic contains value 1MBPS": true,
+                "Response service contains serviceSpecification ": true,
+                "Response serviceSpecification contains id ADSL": true,
+                "Response serviceSpecification contains href http://localhost:8080/DSServiceSpecficationManagement/api/serviceSepcification/v1/ADSL": true,
+                "Response serviceSpecification contains serviceCategoryId internetService": true,
+                "Response serviceQualificationItem contains availabilityavailable": true,
+                "Response serviceQualificationItem contains serviceabilityDate 2016-07-06T13:17:18.524+08:00": true,
+                "POST Body Response serviceSpecification equals Request serviceSpecification": true,
+                "Serivce qualification": true,
+                "POST Body Response provideAlternative equals Request provideAlternative": true,
+                "POST Body Response provideOnlyEligible equals Request provideOnlyEligible": true,
+                "POST Body Response Address equals Request Address": true,
+                "Response contains eligibilityDate 2016-07-06T13:17:18.518+08:00": true
+            },
+            "totalPassFailCounts": {
+                "pass": 20,
+                "fail": 0
+            },
+            "testPassFailCounts": {
+                "Content-Type is present application/json": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Status code is 201": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains ID 766": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains HREF": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains service ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response service contains serviceCharacteristic ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceCharacteristic contains name upstreamSpeed": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceCharacteristic contains value 1MBPS": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response service contains serviceSpecification ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceSpecification contains id ADSL": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceSpecification contains href http://localhost:8080/DSServiceSpecficationManagement/api/serviceSepcification/v1/ADSL": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceSpecification contains serviceCategoryId internetService": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceQualificationItem contains availabilityavailable": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceQualificationItem contains serviceabilityDate 2016-07-06T13:17:18.524+08:00": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "POST Body Response serviceSpecification equals Request serviceSpecification": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Serivce qualification": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "POST Body Response provideAlternative equals Request provideAlternative": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "POST Body Response provideOnlyEligible equals Request provideOnlyEligible": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "POST Body Response Address equals Request Address": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains eligibilityDate 2016-07-06T13:17:18.518+08:00": {
+                    "pass": 1,
+                    "fail": 0
+                }
+            },
+            "times": [],
+            "allTests": [
+                {
+                    "Content-Type is present application/json": "application/json",
+                    "Status code is 201": true,
+                    "Response contains ID 766": true,
+                    "Response contains HREF": true,
+                    "Response contains service ": true,
+                    "Response service contains serviceCharacteristic ": true,
+                    "Response serviceCharacteristic contains name upstreamSpeed": true,
+                    "Response serviceCharacteristic contains value 1MBPS": true,
+                    "Response service contains serviceSpecification ": true,
+                    "Response serviceSpecification contains id ADSL": true,
+                    "Response serviceSpecification contains href http://localhost:8080/DSServiceSpecficationManagement/api/serviceSepcification/v1/ADSL": true,
+                    "Response serviceSpecification contains serviceCategoryId internetService": true,
+                    "Response serviceQualificationItem contains availabilityavailable": true,
+                    "Response serviceQualificationItem contains serviceabilityDate 2016-07-06T13:17:18.524+08:00": true,
+                    "POST Body Response serviceSpecification equals Request serviceSpecification": true,
+                    "Serivce qualification": true,
+                    "POST Body Response provideAlternative equals Request provideAlternative": true,
+                    "POST Body Response provideOnlyEligible equals Request provideOnlyEligible": true,
+                    "POST Body Response Address equals Request Address": true,
+                    "Response contains eligibilityDate 2016-07-06T13:17:18.518+08:00": true
+                }
+            ],
+            "time": 427,
+            "meanResponseTime": 427
+        },
+        {
+            "id": "16d369e9-b8d5-0d13-0920-2976972b0d10",
+            "name": "create a service qualification request - case 2",
+            "url": "{{serviceQualificationManagementApi}}/serviceQualification",
+            "totalTime": 149,
+            "responseCode": {
+                "code": 201,
+                "name": "",
+                "detail": ""
+            },
+            "tests": {
+                "Content-Type is present application/json": "application/json",
+                "Status code is 201": true,
+                "Response contains ID 773": true,
+                "Response contains HREF": true,
+                "Response contains service ": true,
+                "Response service contains serviceSpecification ": true,
+                "Response serviceSpecification contains id ADSL": true,
+                "Response serviceSpecification contains href https://serviceSpecification/ADSL": true,
+                "Response serviceSpecification contains serviceCategoryId internetService": true,
+                "Response serviceQualificationItem contains availabilityavailable-shortfall": true,
+                "Response serviceQualificationItem contains serviceabilityDate 2016-07-06T13:17:18.828+08:00": true,
+                "POST Body Response serviceSpecification equals Request serviceSpecification": true,
+                "POST Body Response provideAlternative equals Request provideAlternative": true,
+                "POST Body Response provideOnlyEligible equals Request provideOnlyEligible": true,
+                "POST Body Response Address equals Request Address": true,
+                "Response contains eligibilityDate 2016-07-06T13:17:18.818+08:00": true
+            },
+            "totalPassFailCounts": {
+                "pass": 16,
+                "fail": 0
+            },
+            "testPassFailCounts": {
+                "Content-Type is present application/json": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Status code is 201": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains ID 773": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains HREF": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains service ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response service contains serviceSpecification ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceSpecification contains id ADSL": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceSpecification contains href https://serviceSpecification/ADSL": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceSpecification contains serviceCategoryId internetService": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceQualificationItem contains availabilityavailable-shortfall": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceQualificationItem contains serviceabilityDate 2016-07-06T13:17:18.828+08:00": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "POST Body Response serviceSpecification equals Request serviceSpecification": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "POST Body Response provideAlternative equals Request provideAlternative": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "POST Body Response provideOnlyEligible equals Request provideOnlyEligible": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "POST Body Response Address equals Request Address": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains eligibilityDate 2016-07-06T13:17:18.818+08:00": {
+                    "pass": 1,
+                    "fail": 0
+                }
+            },
+            "times": [],
+            "allTests": [
+                {
+                    "Content-Type is present application/json": "application/json",
+                    "Status code is 201": true,
+                    "Response contains ID 773": true,
+                    "Response contains HREF": true,
+                    "Response contains service ": true,
+                    "Response service contains serviceSpecification ": true,
+                    "Response serviceSpecification contains id ADSL": true,
+                    "Response serviceSpecification contains href https://serviceSpecification/ADSL": true,
+                    "Response serviceSpecification contains serviceCategoryId internetService": true,
+                    "Response serviceQualificationItem contains availabilityavailable-shortfall": true,
+                    "Response serviceQualificationItem contains serviceabilityDate 2016-07-06T13:17:18.828+08:00": true,
+                    "POST Body Response serviceSpecification equals Request serviceSpecification": true,
+                    "POST Body Response provideAlternative equals Request provideAlternative": true,
+                    "POST Body Response provideOnlyEligible equals Request provideOnlyEligible": true,
+                    "POST Body Response Address equals Request Address": true,
+                    "Response contains eligibilityDate 2016-07-06T13:17:18.818+08:00": true
+                }
+            ],
+            "time": 149,
+            "meanResponseTime": 149
+        },
+        {
+            "id": "d8ad8b38-cd79-fa86-d72f-dece365aae58",
+            "name": "create a service qualification request - case 3",
+            "url": "{{serviceQualificationManagementApi}}/serviceQualification",
+            "totalTime": 238,
+            "responseCode": {
+                "code": 201,
+                "name": "",
+                "detail": ""
+            },
+            "tests": {
+                "Content-Type is present application/json": "application/json",
+                "Status code is 201": true,
+                "Response contains ID 780": true,
+                "Response contains HREF": true,
+                "Response contains service ": true,
+                "Response service contains serviceCharacteristic ": true,
+                "Response serviceCharacteristic contains name upstreamSpeed": true,
+                "Response serviceCharacteristic contains value 1MBPS": true,
+                "Response serviceCharacteristic contains name downstreamSpeed": true,
+                "Response serviceCharacteristic contains value 100MBPS": true,
+                "Response service contains serviceSpecification ": true,
+                "Response serviceSpecification contains id Fiber": true,
+                "Response serviceSpecification contains href http://localhost:8080/DSServiceSpecficationManagement/api/serviceSepcification/v1/Fiber": true,
+                "Response serviceSpecification contains serviceCategoryId internetService": true,
+                "Response serviceQualificationItem contains availabilityavailable": true,
+                "Response serviceQualificationItem contains serviceabilityDate 2016-07-06T13:17:19.124+08:00": true,
+                "POST Body Response serviceSpecification equals Request serviceSpecification": true,
+                "POST Body Response provideAlternative equals Request provideAlternative": true,
+                "POST Body Response provideOnlyEligible equals Request provideOnlyEligible": true,
+                "POST Body Response Address equals Request Address": true,
+                "Response contains eligibilityDate 2016-07-06T13:17:19.118+08:00": true
+            },
+            "totalPassFailCounts": {
+                "pass": 21,
+                "fail": 0
+            },
+            "testPassFailCounts": {
+                "Content-Type is present application/json": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Status code is 201": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains ID 780": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains HREF": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains service ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response service contains serviceCharacteristic ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceCharacteristic contains name upstreamSpeed": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceCharacteristic contains value 1MBPS": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceCharacteristic contains name downstreamSpeed": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceCharacteristic contains value 100MBPS": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response service contains serviceSpecification ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceSpecification contains id Fiber": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceSpecification contains href http://localhost:8080/DSServiceSpecficationManagement/api/serviceSepcification/v1/Fiber": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceSpecification contains serviceCategoryId internetService": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceQualificationItem contains availabilityavailable": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceQualificationItem contains serviceabilityDate 2016-07-06T13:17:19.124+08:00": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "POST Body Response serviceSpecification equals Request serviceSpecification": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "POST Body Response provideAlternative equals Request provideAlternative": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "POST Body Response provideOnlyEligible equals Request provideOnlyEligible": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "POST Body Response Address equals Request Address": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains eligibilityDate 2016-07-06T13:17:19.118+08:00": {
+                    "pass": 1,
+                    "fail": 0
+                }
+            },
+            "times": [],
+            "allTests": [
+                {
+                    "Content-Type is present application/json": "application/json",
+                    "Status code is 201": true,
+                    "Response contains ID 780": true,
+                    "Response contains HREF": true,
+                    "Response contains service ": true,
+                    "Response service contains serviceCharacteristic ": true,
+                    "Response serviceCharacteristic contains name upstreamSpeed": true,
+                    "Response serviceCharacteristic contains value 1MBPS": true,
+                    "Response serviceCharacteristic contains name downstreamSpeed": true,
+                    "Response serviceCharacteristic contains value 100MBPS": true,
+                    "Response service contains serviceSpecification ": true,
+                    "Response serviceSpecification contains id Fiber": true,
+                    "Response serviceSpecification contains href http://localhost:8080/DSServiceSpecficationManagement/api/serviceSepcification/v1/Fiber": true,
+                    "Response serviceSpecification contains serviceCategoryId internetService": true,
+                    "Response serviceQualificationItem contains availabilityavailable": true,
+                    "Response serviceQualificationItem contains serviceabilityDate 2016-07-06T13:17:19.124+08:00": true,
+                    "POST Body Response serviceSpecification equals Request serviceSpecification": true,
+                    "POST Body Response provideAlternative equals Request provideAlternative": true,
+                    "POST Body Response provideOnlyEligible equals Request provideOnlyEligible": true,
+                    "POST Body Response Address equals Request Address": true,
+                    "Response contains eligibilityDate 2016-07-06T13:17:19.118+08:00": true
+                }
+            ],
+            "time": 238,
+            "meanResponseTime": 238
+        },
+        {
+            "id": "9a523a45-7b7c-9c80-0448-7c5cc43fdedd",
+            "name": "find specified service qualification requests - case 1",
+            "url": "{{serviceQualificationManagementApi}}/serviceQualification/{{ID1}}",
+            "totalTime": 76,
+            "responseCode": {
+                "code": 200,
+                "name": "",
+                "detail": ""
+            },
+            "tests": {
+                "Content-Type is present application/json": "application/json",
+                "Status code is 200": true,
+                "Response contains ID 766": true,
+                "Response contains HREF": true,
+                "Response contains service ": true,
+                "Response service contains serviceCharacteristic ": true,
+                "Response serviceCharacteristic contains name upstreamSpeed": true,
+                "Response serviceCharacteristic contains value 1MBPS": true,
+                "Response service contains serviceSpecification ": true,
+                "Response serviceSpecification contains id ADSL": true,
+                "Response serviceSpecification contains href http://localhost:8080/DSServiceSpecficationManagement/api/serviceSepcification/v1/ADSL": true,
+                "Response serviceSpecification contains serviceCategoryId internetService": true,
+                "Response serviceQualificationItem contains availabilityavailable": true,
+                "Response serviceQualificationItem contains serviceabilityDate2016-07-06T13:17:19.421+08:00": true,
+                "Serivce qualification": true,
+                "Response contains eligibilityDate 2016-07-06T13:17:18.518+08:00": true
+            },
+            "totalPassFailCounts": {
+                "pass": 16,
+                "fail": 0
+            },
+            "testPassFailCounts": {
+                "Content-Type is present application/json": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Status code is 200": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains ID 766": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains HREF": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains service ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response service contains serviceCharacteristic ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceCharacteristic contains name upstreamSpeed": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceCharacteristic contains value 1MBPS": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response service contains serviceSpecification ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceSpecification contains id ADSL": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceSpecification contains href http://localhost:8080/DSServiceSpecficationManagement/api/serviceSepcification/v1/ADSL": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceSpecification contains serviceCategoryId internetService": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceQualificationItem contains availabilityavailable": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceQualificationItem contains serviceabilityDate2016-07-06T13:17:19.421+08:00": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Serivce qualification": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains eligibilityDate 2016-07-06T13:17:18.518+08:00": {
+                    "pass": 1,
+                    "fail": 0
+                }
+            },
+            "times": [],
+            "allTests": [
+                {
+                    "Content-Type is present application/json": "application/json",
+                    "Status code is 200": true,
+                    "Response contains ID 766": true,
+                    "Response contains HREF": true,
+                    "Response contains service ": true,
+                    "Response service contains serviceCharacteristic ": true,
+                    "Response serviceCharacteristic contains name upstreamSpeed": true,
+                    "Response serviceCharacteristic contains value 1MBPS": true,
+                    "Response service contains serviceSpecification ": true,
+                    "Response serviceSpecification contains id ADSL": true,
+                    "Response serviceSpecification contains href http://localhost:8080/DSServiceSpecficationManagement/api/serviceSepcification/v1/ADSL": true,
+                    "Response serviceSpecification contains serviceCategoryId internetService": true,
+                    "Response serviceQualificationItem contains availabilityavailable": true,
+                    "Response serviceQualificationItem contains serviceabilityDate2016-07-06T13:17:19.421+08:00": true,
+                    "Serivce qualification": true,
+                    "Response contains eligibilityDate 2016-07-06T13:17:18.518+08:00": true
+                }
+            ],
+            "time": 76,
+            "meanResponseTime": 76
+        },
+        {
+            "id": "2dc93626-f8ac-808a-eeda-8f083bdee8db",
+            "name": "find specified service qualification requests - case 2",
+            "url": "{{serviceQualificationManagementApi}}/serviceQualification/{{ID2}}",
+            "totalTime": 62,
+            "responseCode": {
+                "code": 200,
+                "name": "",
+                "detail": ""
+            },
+            "tests": {
+                "Content-Type is present application/json": "application/json",
+                "Status code is 200": true,
+                "Response contains ID 773": true,
+                "Response contains HREF": true,
+                "Response contains service ": true,
+                "Response service contains serviceSpecification ": true,
+                "Response serviceSpecification contains id ADSL": true,
+                "Response serviceSpecification contains href https://serviceSpecification/ADSL": true,
+                "Response serviceSpecification contains serviceCategoryId internetService": true,
+                "Response serviceQualificationItem contains availabilityavailable-shortfall": true,
+                "Response serviceQualificationItem contains serviceabilityDate2016-07-06T13:17:19.525+08:00": true,
+                "Response contains eligibilityDate 2016-07-06T13:17:18.818+08:00": true
+            },
+            "totalPassFailCounts": {
+                "pass": 12,
+                "fail": 0
+            },
+            "testPassFailCounts": {
+                "Content-Type is present application/json": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Status code is 200": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains ID 773": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains HREF": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains service ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response service contains serviceSpecification ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceSpecification contains id ADSL": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceSpecification contains href https://serviceSpecification/ADSL": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceSpecification contains serviceCategoryId internetService": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceQualificationItem contains availabilityavailable-shortfall": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceQualificationItem contains serviceabilityDate2016-07-06T13:17:19.525+08:00": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains eligibilityDate 2016-07-06T13:17:18.818+08:00": {
+                    "pass": 1,
+                    "fail": 0
+                }
+            },
+            "times": [],
+            "allTests": [
+                {
+                    "Content-Type is present application/json": "application/json",
+                    "Status code is 200": true,
+                    "Response contains ID 773": true,
+                    "Response contains HREF": true,
+                    "Response contains service ": true,
+                    "Response service contains serviceSpecification ": true,
+                    "Response serviceSpecification contains id ADSL": true,
+                    "Response serviceSpecification contains href https://serviceSpecification/ADSL": true,
+                    "Response serviceSpecification contains serviceCategoryId internetService": true,
+                    "Response serviceQualificationItem contains availabilityavailable-shortfall": true,
+                    "Response serviceQualificationItem contains serviceabilityDate2016-07-06T13:17:19.525+08:00": true,
+                    "Response contains eligibilityDate 2016-07-06T13:17:18.818+08:00": true
+                }
+            ],
+            "time": 62,
+            "meanResponseTime": 62
+        },
+        {
+            "id": "3859548e-af13-549b-2313-cace98a058ef",
+            "name": "find specified service qualification requests - case 3",
+            "url": "{{serviceQualificationManagementApi}}/serviceQualification/{{ID3}}",
+            "totalTime": 51,
+            "responseCode": {
+                "code": 200,
+                "name": "",
+                "detail": ""
+            },
+            "tests": {
+                "Content-Type is present application/json": "application/json",
+                "Status code is 200": true,
+                "Response contains ID 780": true,
+                "Response contains HREF": true,
+                "Response contains service ": true,
+                "Response service contains serviceCharacteristic ": true,
+                "Response serviceCharacteristic contains name upstreamSpeed": true,
+                "Response serviceCharacteristic contains value 1MBPS": true,
+                "Response serviceCharacteristic contains name downstreamSpeed": true,
+                "Response serviceCharacteristic contains value 100MBPS": true,
+                "Response service contains serviceSpecification ": true,
+                "Response serviceSpecification contains id Fiber": true,
+                "Response serviceSpecification contains href http://localhost:8080/DSServiceSpecficationManagement/api/serviceSepcification/v1/Fiber": true,
+                "Response serviceSpecification contains serviceCategoryId internetService": true,
+                "Response serviceQualificationItem contains availabilityavailable": true,
+                "Response serviceQualificationItem contains serviceabilityDate2016-07-06T13:17:19.621+08:00": true,
+                "Serivce qualification": true,
+                "Response contains eligibilityDate 2016-07-06T13:17:19.118+08:00": true
+            },
+            "totalPassFailCounts": {
+                "pass": 18,
+                "fail": 0
+            },
+            "testPassFailCounts": {
+                "Content-Type is present application/json": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Status code is 200": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains ID 780": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains HREF": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains service ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response service contains serviceCharacteristic ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceCharacteristic contains name upstreamSpeed": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceCharacteristic contains value 1MBPS": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceCharacteristic contains name downstreamSpeed": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceCharacteristic contains value 100MBPS": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response service contains serviceSpecification ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceSpecification contains id Fiber": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceSpecification contains href http://localhost:8080/DSServiceSpecficationManagement/api/serviceSepcification/v1/Fiber": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceSpecification contains serviceCategoryId internetService": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceQualificationItem contains availabilityavailable": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response serviceQualificationItem contains serviceabilityDate2016-07-06T13:17:19.621+08:00": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Serivce qualification": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains eligibilityDate 2016-07-06T13:17:19.118+08:00": {
+                    "pass": 1,
+                    "fail": 0
+                }
+            },
+            "times": [],
+            "allTests": [
+                {
+                    "Content-Type is present application/json": "application/json",
+                    "Status code is 200": true,
+                    "Response contains ID 780": true,
+                    "Response contains HREF": true,
+                    "Response contains service ": true,
+                    "Response service contains serviceCharacteristic ": true,
+                    "Response serviceCharacteristic contains name upstreamSpeed": true,
+                    "Response serviceCharacteristic contains value 1MBPS": true,
+                    "Response serviceCharacteristic contains name downstreamSpeed": true,
+                    "Response serviceCharacteristic contains value 100MBPS": true,
+                    "Response service contains serviceSpecification ": true,
+                    "Response serviceSpecification contains id Fiber": true,
+                    "Response serviceSpecification contains href http://localhost:8080/DSServiceSpecficationManagement/api/serviceSepcification/v1/Fiber": true,
+                    "Response serviceSpecification contains serviceCategoryId internetService": true,
+                    "Response serviceQualificationItem contains availabilityavailable": true,
+                    "Response serviceQualificationItem contains serviceabilityDate2016-07-06T13:17:19.621+08:00": true,
+                    "Serivce qualification": true,
+                    "Response contains eligibilityDate 2016-07-06T13:17:19.118+08:00": true
+                }
+            ],
+            "time": 51,
+            "meanResponseTime": 51
+        },
+        {
+            "id": "bb91270e-ca48-3134-62e7-3465d3f68e82",
+            "name": "create a product offering qualification request",
+            "url": "{{serviceQualificationManagementApi}}/productOfferingQualification",
+            "totalTime": 407,
+            "responseCode": {
+                "code": 201,
+                "name": "",
+                "detail": ""
+            },
+            "tests": {
+                "Content-Type is present application/json": "application/json",
+                "Status code is 201": true,
+                "Response contains ID 788": true,
+                "Response contains HREF": true,
+                "POST Body Response provideAlternative equals Request provideAlternative": true,
+                "POST Body Response provideOnlyEligible equals Request provideOnlyEligible": true,
+                "Response contains eligibilityDate 2016-07-06T13:17:20.076+08:00": true,
+                "Response contains qualificationState 2016-07-06T13:17:20.076+08:00": true,
+                "Response contains productOffering ": true,
+                "productOffering contains id5": true,
+                "productOffering contains hrefhttp: //serverlocation:port/catalogManagement/productOffering/42": true,
+                "productOffering contains category ": true,
+                "productOffering contains product ": true,
+                "product contains productSpecification ": true,
+                "productSpecification contains id7": true,
+                "productSpecification contains version2.0": true,
+                "productSpecification contains nameTVservice with Internet Play": true
+            },
+            "totalPassFailCounts": {
+                "pass": 17,
+                "fail": 0
+            },
+            "testPassFailCounts": {
+                "Content-Type is present application/json": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Status code is 201": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains ID 788": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains HREF": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "POST Body Response provideAlternative equals Request provideAlternative": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "POST Body Response provideOnlyEligible equals Request provideOnlyEligible": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains eligibilityDate 2016-07-06T13:17:20.076+08:00": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains qualificationState 2016-07-06T13:17:20.076+08:00": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains productOffering ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "productOffering contains id5": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "productOffering contains hrefhttp: //serverlocation:port/catalogManagement/productOffering/42": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "productOffering contains category ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "productOffering contains product ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "product contains productSpecification ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "productSpecification contains id7": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "productSpecification contains version2.0": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "productSpecification contains nameTVservice with Internet Play": {
+                    "pass": 1,
+                    "fail": 0
+                }
+            },
+            "times": [],
+            "allTests": [
+                {
+                    "Content-Type is present application/json": "application/json",
+                    "Status code is 201": true,
+                    "Response contains ID 788": true,
+                    "Response contains HREF": true,
+                    "POST Body Response provideAlternative equals Request provideAlternative": true,
+                    "POST Body Response provideOnlyEligible equals Request provideOnlyEligible": true,
+                    "Response contains eligibilityDate 2016-07-06T13:17:20.076+08:00": true,
+                    "Response contains qualificationState 2016-07-06T13:17:20.076+08:00": true,
+                    "Response contains productOffering ": true,
+                    "productOffering contains id5": true,
+                    "productOffering contains hrefhttp: //serverlocation:port/catalogManagement/productOffering/42": true,
+                    "productOffering contains category ": true,
+                    "productOffering contains product ": true,
+                    "product contains productSpecification ": true,
+                    "productSpecification contains id7": true,
+                    "productSpecification contains version2.0": true,
+                    "productSpecification contains nameTVservice with Internet Play": true
+                }
+            ],
+            "time": 407,
+            "meanResponseTime": 407
+        },
+        {
+            "id": "24a24809-fdf6-62bf-b6f4-8d5283efca2f",
+            "name": "find specified product offering qualification request",
+            "url": "{{serviceQualificationManagementApi}}/productOfferingQualification/{{ID4}}",
+            "totalTime": 160,
+            "responseCode": {
+                "code": 200,
+                "name": "",
+                "detail": ""
+            },
+            "tests": {
+                "Content-Type is present application/json": "application/json",
+                "Status code is 200": true,
+                "Response contains ID 788": true,
+                "Response contains HREF": true,
+                "Response contains eligibilityDate 2016-07-06T13:17:20.295+08:00": true,
+                "Response contains qualificationState DONE": true,
+                "Response contains productOffering ": true,
+                "productOffering contains id5": true,
+                "productOffering contains hrefhttp: //serverlocation:port/catalogManagement/productOffering/42": true,
+                "productOffering contains category ": true,
+                "productOffering contains product ": true,
+                "product contains productSpecification ": true,
+                "productSpecification contains id7": true,
+                "productSpecification contains version2.0": true,
+                "productSpecification contains nameTVservice with Internet Play": true
+            },
+            "totalPassFailCounts": {
+                "pass": 15,
+                "fail": 0
+            },
+            "testPassFailCounts": {
+                "Content-Type is present application/json": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Status code is 200": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains ID 788": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains HREF": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains eligibilityDate 2016-07-06T13:17:20.295+08:00": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains qualificationState DONE": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "Response contains productOffering ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "productOffering contains id5": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "productOffering contains hrefhttp: //serverlocation:port/catalogManagement/productOffering/42": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "productOffering contains category ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "productOffering contains product ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "product contains productSpecification ": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "productSpecification contains id7": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "productSpecification contains version2.0": {
+                    "pass": 1,
+                    "fail": 0
+                },
+                "productSpecification contains nameTVservice with Internet Play": {
+                    "pass": 1,
+                    "fail": 0
+                }
+            },
+            "times": [],
+            "allTests": [
+                {
+                    "Content-Type is present application/json": "application/json",
+                    "Status code is 200": true,
+                    "Response contains ID 788": true,
+                    "Response contains HREF": true,
+                    "Response contains eligibilityDate 2016-07-06T13:17:20.295+08:00": true,
+                    "Response contains qualificationState DONE": true,
+                    "Response contains productOffering ": true,
+                    "productOffering contains id5": true,
+                    "productOffering contains hrefhttp: //serverlocation:port/catalogManagement/productOffering/42": true,
+                    "productOffering contains category ": true,
+                    "productOffering contains product ": true,
+                    "product contains productSpecification ": true,
+                    "productSpecification contains id7": true,
+                    "productSpecification contains version2.0": true,
+                    "productSpecification contains nameTVservice with Internet Play": true
+                }
+            ],
+            "time": 160,
+            "meanResponseTime": 160
+        }
+    ],
+    "environment": {
+        "id": "e9ff5be6-a134-95a0-3719-abe85cd8241b",
+        "name": "TMForum Local",
+        "values": [
+            {
+                "key": "Host",
+                "value": "http://localhost:8080",
+                "type": "text",
+                "name": "Host",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "billingManagementApi",
+                "value": "{{Host}}/DSBillingManagement/api/billingManagement/v2",
+                "type": "text",
+                "name": "billingManagementApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "billingManagementAdminApi",
+                "value": "{{Host}}/DSBillingManagement/api/admin",
+                "type": "text",
+                "name": "billingManagementAdminApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "billingManagementSubscriberApi",
+                "value": "{{Host}}/DSBillingManagement/subscriber/api",
+                "type": "text",
+                "name": "billingManagementSubscriberApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "partyManagementApi",
+                "value": "{{Host}}/DSPartyManagement/api/partyManagement/v2",
+                "type": "text",
+                "name": "partyManagementApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "partyManagementAdminApi",
+                "value": "{{Host}}/DSPartyManagement/api/admin",
+                "type": "text",
+                "name": "partyManagementAdminApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "partyManagementSubscriberApi",
+                "value": "{{Host}}/DSPartyManagement/subscriber/api",
+                "type": "text",
+                "name": "partyManagementSubscriberApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "customerManagementApi",
+                "value": "{{Host}}/DSCustomerManagement/api/customerManagement/v2",
+                "type": "text",
+                "name": "customerManagementApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "customerManagementAdminApi",
+                "value": "{{Host}}/DSCustomerManagement/api/admin",
+                "type": "text",
+                "name": "customerManagementAdminApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "customerManagementSubscriberApi",
+                "value": "{{Host}}/DSCustomerManagement/subscriber/api",
+                "type": "text",
+                "name": "customerManagementSubscriberApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "productOrderingApi",
+                "value": "{{Host}}/DSProductOrdering/api/productOrdering/v2",
+                "type": "text",
+                "name": "productOrderingApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "productOrderingAdminApi",
+                "value": "{{Host}}/DSProductOrdering/api/admin",
+                "type": "text",
+                "name": "productOrderingAdminApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "productOrderingSubscriberApi",
+                "value": "{{Host}}/DSProductOrdering/subscriber/api",
+                "type": "text",
+                "name": "productOrderingSubscriberApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "troubleTicketingApi",
+                "value": "{{Host}}/DSTroubleTicket/api/troubleTicketManagement/v2",
+                "type": "text",
+                "name": "troubleTicketingApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "troubleTicketingAdminApi",
+                "value": "{{Host}}/DSTroubleTicket/api/admin/troubleTicket",
+                "type": "text",
+                "name": "troubleTicketingAdminApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "troubleTicketingSubscriberApi",
+                "value": "{{Host}}/DSTroubleTicket/subscriber/api",
+                "type": "text",
+                "name": "troubleTicketingSubscriberApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "productInventoryApi",
+                "value": "{{Host}}/DSProductInventory/api/productInventory/v2",
+                "type": "text",
+                "name": "productInventoryApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "productInventoryAdminApi",
+                "value": "{{Host}}/DSProductInventory/api/admin",
+                "type": "text",
+                "name": "productInventoryAdminApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "productInventorySubscriberApi",
+                "value": "{{Host}}/DSProductInventory/subscriber/api",
+                "type": "text",
+                "name": "productInventorySubscriberApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "catalogManagementApi",
+                "value": "{{Host}}/DSProductCatalog/api/catalogManagement/v2",
+                "type": "text",
+                "name": "catalogManagementApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "catalogManagementAdminApi",
+                "value": "{{Host}}/DSProductCatalog/api/admin",
+                "type": "text",
+                "name": "catalogManagementAdminApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "catalogManagementSubscriberApi",
+                "value": "{{Host}}/DSProductCatalog/subscriber/eventApi",
+                "type": "text",
+                "name": "catalogManagementSubscriberApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "slaManagementApi",
+                "value": "{{Host}}/DSLAManagement/api/slaManagement/v2",
+                "type": "text",
+                "name": "slaManagementApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "slaManagementSubscriberApi",
+                "value": "{{Host}}/DSLAManagement/subscriber/api",
+                "type": "text",
+                "name": "slaManagementSubscriberApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "slaManagementAdminApi",
+                "value": "{{Host}}/DSLAManagement/api/admin",
+                "type": "text",
+                "name": "slaManagementAdminApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "usageManagementApi",
+                "value": "{{Host}}/DSUsageManagement/api/usageManagement/v2",
+                "type": "text",
+                "name": "usageManagementApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "usageManagementSubscriberApi",
+                "value": "{{Host}}/DSUsageManagement/subscriber/api",
+                "type": "text",
+                "name": "usageManagementSubscriberApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "usageManagementAdminApi",
+                "value": "{{Host}}/DSUsageManagement/api/admin/usage",
+                "type": "text",
+                "name": "usageManagementAdminApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "appointmentManagementApi",
+                "value": "{{Host}}/DSAppointmentManagement/api/appointment/v1",
+                "type": "text",
+                "name": "appointmentManagementApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "addressManagementApi",
+                "value": "{{Host}}/DSAddressManagement/api/addressManagement/v1",
+                "type": "text",
+                "name": "addressManagementApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "addressManagementAdminApi",
+                "value": "{{Host}}/DSAddressManagement/api/admin",
+                "type": "text",
+                "name": "addressManagementAdminApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "quoteManagementApi",
+                "value": "{{Host}}/DSQuoteManagement/api/quoteManagement/v1",
+                "type": "text",
+                "name": "quoteManagementApi",
+                "enabled": true,
+                "hovered": false
+            },
+            {
+                "key": "serviceQualificationManagementAdminApi",
+                "value": "{{Host}}/DSServiceQualificationManagement/api/admin/v1",
+                "type": "text",
+                "enabled": true
+            },
+            {
+                "key": "serviceQualificationManagementApi",
+                "value": "{{Host}}/DSServiceQualificationManagement/api/v1",
+                "type": "text",
+                "enabled": true
+            },
+            {
+                "key": "serviceQualificationContext",
+                "value": "{{Host}}/DSServiceQualificationManagement/api",
+                "type": "text",
+                "enabled": true
+            },
+            {
+                "key": "serviceQualificationContextRoot",
+                "value": "{{Host}}/DSServiceQualificationManagement",
+                "type": "text",
+                "enabled": true
+            },
+            {
+                "key": "testName",
+                "type": "text",
+                "value": "tmf-product-offering-qualification-002",
+                "enabled": true
+            }
+        ],
+        "team": null,
+        "timestamp": 1467776551982,
+        "synced": false,
+        "syncedFilename": "",
+        "isDeleted": false
+    },
+    "delay": 0
+}
