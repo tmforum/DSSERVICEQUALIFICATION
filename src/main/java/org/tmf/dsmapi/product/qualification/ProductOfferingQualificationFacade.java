@@ -14,7 +14,7 @@ import org.eclipse.persistence.jpa.JpaHelper;
 import org.eclipse.persistence.queries.QueryByExamplePolicy;
 import org.eclipse.persistence.queries.ReadObjectQuery;
 import org.tmf.dsmapi.commons.facade.AbstractFacade;
-import org.tmf.dsmapi.product.qualification.model.ProductOfferingQualification;
+import org.tmf.dsmapi.product.qualification.entity.ProductOfferingQualification;
 
 /**
  *

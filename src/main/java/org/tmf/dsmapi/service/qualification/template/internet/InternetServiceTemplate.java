@@ -10,13 +10,14 @@ import java.util.Date;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import org.tmf.dsmapi.service.qualification.model.ServiceQualification;
-import org.tmf.dsmapi.service.qualification.model.ServiceSpecification;
-import org.tmf.dsmapi.service.qualification.model.ServiceSpecificationCharacteristic;
-import org.tmf.dsmapi.service.qualification.req.ServiceQualificationReq;
-import org.tmf.dsmapi.service.qualification.req.ServiceReq;
-import org.tmf.dsmapi.service.qualification.rsp.ServiceQualificationItemRsp;
-import org.tmf.dsmapi.service.qualification.rsp.ServiceRsp;
+import org.tmf.dsmapi.service.qualification.ServiceQualificationConverter;
+import org.tmf.dsmapi.service.qualification.enity.ServiceQualificationEntity;
+import org.tmf.dsmapi.service.qualification.enity.ServiceSpecificationEntity;
+import org.tmf.dsmapi.service.qualification.enity.ServiceSpecificationCharacteristicEntity;
+import org.tmf.dsmapi.service.qualification.model.ServiceQualificationItemRsp;
+import org.tmf.dsmapi.service.qualification.model.ServiceQualificationReq;
+import org.tmf.dsmapi.service.qualification.model.ServiceReq;
+import org.tmf.dsmapi.service.qualification.model.ServiceRsp;
 import org.tmf.dsmapi.service.qualification.template.Template;
 import org.tmf.dsmapi.service.qualification.template.TemplateNotFoundException;
 import org.tmf.dsmapi.service.qualification.template.Tuple;
@@ -37,11 +38,11 @@ public class InternetServiceTemplate extends Template {
      * @return
      */
     @Override
-    public ServiceSpecification prepare(ServiceSpecification serviceSpecification) {
+    public ServiceSpecificationEntity prepare(ServiceSpecificationEntity serviceSpecification) {
 
         Tuple<Long, String> tupleFrom = null;
         Tuple<Long, String> tupleTo = null;
-        for (ServiceSpecificationCharacteristic entity : serviceSpecification.getServiceSpecificationCharacteristic()) {
+        for (ServiceSpecificationCharacteristicEntity entity : serviceSpecification.getServiceSpecificationCharacteristic()) {
 
             if (CharacteristicEnum.DOWNSTREAM_SPEED.getValue().equals(entity.getName())) {
                 tupleFrom = InternetServiceUtil.parseSpeedCharacteristicValue(entity.getValuefrom());
@@ -74,59 +75,59 @@ public class InternetServiceTemplate extends Template {
         if (serviceReq == null) {
             return null;
         }
-        
-        List<ServiceQualification> serviceRelaList = null;
-        if("Yes".equalsIgnoreCase(qualificationReq.getProvideOnlyEligible())) {
+
+        List<ServiceQualificationEntity> serviceRelaList = null;
+        if ("Yes".equalsIgnoreCase(qualificationReq.getProvideOnlyEligible())) {
             serviceRelaList = internetServiceFacade.queryQualifiedService(qualificationReq, serviceReq);
         }
-        
-        List<ServiceQualification> alterServiceRelaList = null;
-        if(serviceRelaList == null || serviceRelaList.isEmpty()) {
-            if("Yes".equalsIgnoreCase(qualificationReq.getProvideAlternative())) {
+
+        List<ServiceQualificationEntity> alterServiceRelaList = null;
+        if (serviceRelaList == null || serviceRelaList.isEmpty()) {
+            if ("Yes".equalsIgnoreCase(qualificationReq.getProvideAlternative())) {
                 alterServiceRelaList = internetServiceFacade.queryQualifiedService(qualificationReq, serviceReq, true);
             }
         }
-        
+
         ServiceQualificationItemRsp rspItem;
         List<ServiceQualificationItemRsp> itemRspList = new ArrayList<>();
         // requester ask for a broadband access with a download speed at least equals to 20 Mb/s – if only 12 M/bs is available 
-        if(alterServiceRelaList != null && !alterServiceRelaList.isEmpty()) {
+        if (alterServiceRelaList != null && !alterServiceRelaList.isEmpty()) {
             rspItem = new ServiceQualificationItemRsp();
-            ServiceQualification rela = alterServiceRelaList.get(0);
-            if(rela.getServiceSpecification() != null && !rela.getServiceSpecification().isEmpty()) {
-                ServiceSpecification servSpecification = rela.getServiceSpecification().get(0);
+            ServiceQualificationEntity rela = alterServiceRelaList.get(0);
+            if (rela.getServiceSpecification() != null && !rela.getServiceSpecification().isEmpty()) {
+                ServiceSpecificationEntity servSpecification = rela.getServiceSpecification().get(0);
                 //servSpecification.clean();
-                ServiceRsp alterService = serviceReq.convertAlterService(servSpecification);
-                alterService.setServiceSpecification(servSpecification);
- 
+                ServiceRsp alterService = ServiceQualificationConverter.convertAlterService(servSpecification);
+                alterService.setServiceSpecification(ServiceQualificationConverter.convert(servSpecification));
+
                 List<ServiceRsp> alterList = new ArrayList<>();
                 alterList.add(alterService);
                 rspItem.setAlternativeService(alterList);
-                rspItem.setService(serviceReq.convertServiceRsp());
+                rspItem.setService(ServiceQualificationConverter.convert(serviceReq));
                 rspItem.setAvailability("available-shortfall");
                 rspItem.setServiceabilityDate(new Date());
-                
+
                 itemRspList.add(rspItem);
             }
         }
-        
+
         if (serviceRelaList == null || serviceRelaList.isEmpty()) {
             return itemRspList;
         }
-        for (ServiceQualification rela : serviceRelaList) {
+        for (ServiceQualificationEntity rela : serviceRelaList) {
 
-            List<ServiceSpecification> servSpecList = rela.getServiceSpecification();
+            List<ServiceSpecificationEntity> servSpecList = rela.getServiceSpecification();
             if (servSpecList == null) {
                 continue;
             }
-            for (ServiceSpecification servSpec : servSpecList) {
+            for (ServiceSpecificationEntity servSpec : servSpecList) {
                 rspItem = new ServiceQualificationItemRsp();
                 rspItem.setAvailability("available");
                 rspItem.setServiceabilityDate(new Date());
-                ServiceRsp serviceRsp = serviceReq.convert();
-                
+                ServiceRsp serviceRsp = ServiceQualificationConverter.convert(serviceReq);
+
                 //servSpec.clean();
-                serviceRsp.setServiceSpecification(servSpec);
+                serviceRsp.setServiceSpecification(ServiceQualificationConverter.convert(servSpec));
                 rspItem.setService(serviceRsp);
                 itemRspList.add(rspItem);
             }

@@ -14,14 +14,14 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
-import org.tmf.dsmapi.service.qualification.model.ServiceQualification;
-import org.tmf.dsmapi.service.qualification.req.AddressDescriptionReq;
-import org.tmf.dsmapi.service.qualification.req.AddressReq;
-import org.tmf.dsmapi.service.qualification.req.GeoCodeReq;
-import org.tmf.dsmapi.service.qualification.req.ServiceQualificationReq;
-import org.tmf.dsmapi.service.qualification.req.ServiceReq;
-import org.tmf.dsmapi.service.qualification.req.ServiceReqCharacteristic;
-import org.tmf.dsmapi.service.qualification.req.ServiceSpecificationReq;
+import org.tmf.dsmapi.service.qualification.model.AddressDescriptionReq;
+import org.tmf.dsmapi.service.qualification.model.AddressReq;
+import org.tmf.dsmapi.service.qualification.model.GeoCodeReq;
+import org.tmf.dsmapi.service.qualification.enity.ServiceQualificationEntity;
+import org.tmf.dsmapi.service.qualification.model.ServiceQualificationReq;
+import org.tmf.dsmapi.service.qualification.model.ServiceReq;
+import org.tmf.dsmapi.service.qualification.model.ServiceReqCharacteristic;
+import org.tmf.dsmapi.service.qualification.model.ServiceSpecificationReq;
 import org.tmf.dsmapi.service.qualification.template.QueryPreparation;
 import org.tmf.dsmapi.service.qualification.template.Tuple;
 
@@ -41,7 +41,7 @@ public class InternetServiceFacade {
      * @param servReq
      * @return
      */
-    public List<ServiceQualification> queryQualifiedService(ServiceQualificationReq qualificationReq, ServiceReq servReq) {
+    public List<ServiceQualificationEntity> queryQualifiedService(ServiceQualificationReq qualificationReq, ServiceReq servReq) {
         return queryQualifiedService(qualificationReq, servReq, false);
     }
 
@@ -52,7 +52,7 @@ public class InternetServiceFacade {
      * @param alternative
      * @return
      */
-    public List<ServiceQualification> queryQualifiedService(ServiceQualificationReq qualificationReq, ServiceReq servReq, boolean alternative) {
+    public List<ServiceQualificationEntity> queryQualifiedService(ServiceQualificationReq qualificationReq, ServiceReq servReq, boolean alternative) {
 
         QueryPreparation queryPreparation    = getJoinAddress(qualificationReq);
         QueryPreparation  servicePreparation = getJoinServiceSpec(qualificationReq, servReq, alternative);
@@ -97,7 +97,7 @@ public class InternetServiceFacade {
                 query.setParameter(param.getKey(), param.getValue());
             }
         }
-        List<ServiceQualification> resultList = (List<ServiceQualification>) query.getResultList();
+        List<ServiceQualificationEntity> resultList = (List<ServiceQualificationEntity>) query.getResultList();
 
         return resultList;
     }

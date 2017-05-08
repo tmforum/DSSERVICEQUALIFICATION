@@ -7,7 +7,7 @@ package org.tmf.dsmapi.service.qualification.event;
 
 import java.util.Date;
 import javax.ejb.Local;
-import org.tmf.dsmapi.product.qualification.req.ProductOfferingQualificationReq;
+import org.tmf.dsmapi.product.qualification.entity.ProductOfferingQualificationReqEntity;
 
 /**
  *
@@ -24,5 +24,5 @@ public interface ProductOfferingQualificationEventPublisherLocal {
      * @param bean the bean which has been created
      * @param date the creation date
      */
-    public void createNotification(ProductOfferingQualificationReq bean, Date date);
+    public void createNotification(ProductOfferingQualificationReqEntity bean, Date date);
 }

@@ -9,14 +9,14 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import org.tmf.dsmapi.commons.facade.AbstractFacade;
-import org.tmf.dsmapi.product.qualification.req.ProductOfferingQualificationReq;
+import org.tmf.dsmapi.product.qualification.entity.ProductOfferingQualificationReqEntity;
 
 /**
  *
  * @author Lin
  */
 @Stateless
-public class ProductOfferingQualificationReqFacade extends AbstractFacade<ProductOfferingQualificationReq> {
+public class ProductOfferingQualificationReqFacade extends AbstractFacade<ProductOfferingQualificationReqEntity> {
 
     @PersistenceContext(unitName = "DSServiceQualificationPU")
     private EntityManager em;
@@ -25,7 +25,7 @@ public class ProductOfferingQualificationReqFacade extends AbstractFacade<Produc
      *
      */
     public ProductOfferingQualificationReqFacade() {
-        super(ProductOfferingQualificationReq.class);
+        super(ProductOfferingQualificationReqEntity.class);
     }
 
     /**

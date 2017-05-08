@@ -22,7 +22,8 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.tmf.dsmapi.commons.utils.CustomJsonDateSerializer;
-import org.tmf.dsmapi.service.qualification.req.ServiceQualificationReq;
+import org.tmf.dsmapi.service.qualification.enity.ServiceQualificationReqEntity;
+import org.tmf.dsmapi.service.qualification.model.ServiceQualificationReq;
 
 /**
  *
@@ -46,7 +47,7 @@ public class ServiceQualificationEvent implements Serializable {
     @Enumerated(value = EnumType.STRING)
     private QualificationEventTypeEnum eventType;
     
-    private ServiceQualificationReq resource;
+    private ServiceQualificationReqEntity resource;
 
     @JsonProperty("eventId")
     public String getId() {
@@ -73,17 +74,24 @@ public class ServiceQualificationEvent implements Serializable {
         this.eventType = eventType;
     }
 
-    public ServiceQualificationReq getResource() {
-        return resource;
-    }
-
-    public void setResource(ServiceQualificationReq resource) {
-        this.resource = resource;
-    }
 
     @Override
     public String toString() {
-        return "ServiceQualificationEvent{" + "id=" + id + ", eventTime=" + eventTime + ", eventType=" + eventType + ", resource=" + resource + '}';
+        return "ServiceQualificationEvent{" + "id=" + id + ", eventTime=" + eventTime + ", eventType=" + eventType + ", resource=" + getResource() + '}';
+    }
+
+    /**
+     * @return the resource
+     */
+    public ServiceQualificationReqEntity getResource() {
+        return resource;
+    }
+
+    /**
+     * @param resource the resource to set
+     */
+    public void setResource(ServiceQualificationReqEntity resource) {
+        this.resource = resource;
     }
     
 }

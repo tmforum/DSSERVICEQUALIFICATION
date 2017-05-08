@@ -22,7 +22,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.tmf.dsmapi.commons.utils.CustomJsonDateSerializer;
-import org.tmf.dsmapi.product.qualification.req.ProductOfferingQualificationReq;
+import org.tmf.dsmapi.product.qualification.entity.ProductOfferingQualificationReqEntity;
 
 /**
  *
@@ -45,7 +45,7 @@ public class ProductOfferingQualificationEvent implements Serializable {
     @Enumerated(value = EnumType.STRING)
     private QualificationEventTypeEnum eventType;
     
-    private ProductOfferingQualificationReq resource;
+    private ProductOfferingQualificationReqEntity resource;
 
     @JsonProperty("eventId")
     public String getId() {
@@ -72,11 +72,11 @@ public class ProductOfferingQualificationEvent implements Serializable {
         this.eventType = eventType;
     }
 
-    public ProductOfferingQualificationReq getResource() {
+    public ProductOfferingQualificationReqEntity getResource() {
         return resource;
     }
 
-    public void setResource(ProductOfferingQualificationReq resource) {
+    public void setResource(ProductOfferingQualificationReqEntity resource) {
         this.resource = resource;
     }
 

@@ -9,12 +9,13 @@ import java.io.Serializable;
 
 import java.util.Date;
 import java.util.List;
-import org.tmf.dsmapi.product.qualification.model.ProductOfferingQualificationItem;
-import org.tmf.dsmapi.product.qualification.req.RelatedPartyReq;
-import org.tmf.dsmapi.service.qualification.model.QualificationStateEnum;
-import org.tmf.dsmapi.service.qualification.req.AddressDescriptionReq;
-import org.tmf.dsmapi.service.qualification.req.AddressReq;
-import org.tmf.dsmapi.service.qualification.req.GeoCodeReq;
+import org.tmf.dsmapi.product.qualification.entity.ProductOfferingQualificationItem;
+import org.tmf.dsmapi.product.qualification.entity.RelatedPartyReqEntity;
+import org.tmf.dsmapi.service.qualification.model.AddressDescriptionReq;
+import org.tmf.dsmapi.service.qualification.model.AddressReq;
+import org.tmf.dsmapi.service.qualification.model.GeoCodeReq;
+import org.tmf.dsmapi.service.qualification.model.ServiceQualificationRsp.QualificationStateEnum;
+
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder(value={"id","href","interactionDate",
@@ -33,7 +34,7 @@ public class ProductOfferingQualificationRsp implements Serializable {
     protected Date interactionDate = null;
     protected String description = null;
     protected Date eligibilityDate = null;
-    protected List<RelatedPartyReq> relatedParty = null;
+    protected List<RelatedPartyReqEntity> relatedParty = null;
     protected String channel = null;
     protected String productInventoryId = null;
     protected AddressReq address = null;
@@ -128,11 +129,11 @@ public class ProductOfferingQualificationRsp implements Serializable {
 
     @ApiModelProperty(value = "")
     @JsonProperty("relatedParty")
-    public List<RelatedPartyReq> getRelatedParty() {
+    public List<RelatedPartyReqEntity> getRelatedParty() {
         return relatedParty;
     }
 
-    public void setRelatedParty(List<RelatedPartyReq> relatedParty) {
+    public void setRelatedParty(List<RelatedPartyReqEntity> relatedParty) {
         this.relatedParty = relatedParty;
     }
 

@@ -11,14 +11,14 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import org.tmf.dsmapi.commons.facade.AbstractFacade;
-import org.tmf.dsmapi.service.qualification.model.Address;
+import org.tmf.dsmapi.service.qualification.enity.AddressEntity;
 
 /**
  *
  * @author Lin
  */
 @Stateless
-public class AddressFacade extends AbstractFacade<Address> {
+public class AddressFacade extends AbstractFacade<AddressEntity> {
     
     @PersistenceContext(unitName = "DSServiceQualificationPU")
     private EntityManager em;
@@ -28,12 +28,12 @@ public class AddressFacade extends AbstractFacade<Address> {
      * @param href
      * @return 
      */
-    public Address findByHref(String href) {
+    public AddressEntity findByHref(String href) {
         String sqlStr = "select a from Address a where a.href = :href";
         Query query = em.createQuery(sqlStr);
         query.setParameter("href", href);
         
-        List<Address> addressList = (List<Address>)query.getResultList();
+        List<AddressEntity> addressList = (List<AddressEntity>)query.getResultList();
         if(addressList != null && addressList.size() > 0) {
             return addressList.get(0);
         }
@@ -44,7 +44,7 @@ public class AddressFacade extends AbstractFacade<Address> {
      * 
      */
     public AddressFacade() {
-        super(Address.class);
+        super(AddressEntity.class);
     }
     
     /**

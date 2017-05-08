@@ -16,7 +16,7 @@ import javax.ejb.Stateless;
 import org.tmf.dsmapi.commons.exceptions.BadUsageException;
 import org.tmf.dsmapi.hub.Hub;
 import org.tmf.dsmapi.hub.HubFacade;
-import org.tmf.dsmapi.product.qualification.req.ProductOfferingQualificationReq;
+import org.tmf.dsmapi.product.qualification.entity.ProductOfferingQualificationReqEntity;
 
 /**
  *
@@ -53,7 +53,7 @@ public class ProductOfferingQualificationEventPublisher implements ProductOfferi
     }
 
     @Override
-    public void createNotification(ProductOfferingQualificationReq bean, Date date) {
+    public void createNotification(ProductOfferingQualificationReqEntity bean, Date date) {
         ProductOfferingQualificationEvent event = new ProductOfferingQualificationEvent();
         event.setEventTime(date);
         event.setEventType(QualificationEventTypeEnum.ProductOfferingQualificationCreation);

@@ -6,10 +6,11 @@
 package org.tmf.dsmapi.service.qualification.template;
 
 import java.util.List;
-import org.tmf.dsmapi.service.qualification.model.ServiceSpecification;
-import org.tmf.dsmapi.service.qualification.req.ServiceQualificationReq;
-import org.tmf.dsmapi.service.qualification.req.ServiceReq;
-import org.tmf.dsmapi.service.qualification.rsp.ServiceQualificationItemRsp;
+import org.tmf.dsmapi.service.qualification.model.ServiceQualificationItemRsp;
+import org.tmf.dsmapi.service.qualification.model.ServiceQualificationReq;
+import org.tmf.dsmapi.service.qualification.model.ServiceReq;
+import org.tmf.dsmapi.service.qualification.enity.ServiceSpecificationEntity;
+
 
 /**
  *
@@ -22,7 +23,7 @@ public abstract class Template {
      * @param serviceSpecification
      * @return
      */
-    public ServiceSpecification prepare(ServiceSpecification serviceSpecification) {
+    public ServiceSpecificationEntity prepare(ServiceSpecificationEntity serviceSpecification) {
 
         return serviceSpecification;
     }

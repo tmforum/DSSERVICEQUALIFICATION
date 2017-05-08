@@ -22,10 +22,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import org.tmf.dsmapi.commons.exceptions.UnknownResourceException;
 import org.tmf.dsmapi.commons.jaxrs.Report;
-import org.tmf.dsmapi.service.qualification.model.Address;
-import org.tmf.dsmapi.service.qualification.model.ServiceQualification;
-import org.tmf.dsmapi.service.qualification.model.ServiceQualificationRelation;
-import org.tmf.dsmapi.service.qualification.model.ServiceSpecification;
+import org.tmf.dsmapi.service.qualification.enity.AddressEntity;
+import org.tmf.dsmapi.service.qualification.enity.ServiceQualificationEntity;
+import org.tmf.dsmapi.service.qualification.enity.ServiceQualificationRelationEntity;
+import org.tmf.dsmapi.service.qualification.enity.ServiceSpecificationEntity;
 import org.tmf.dsmapi.service.qualification.template.Template;
 import org.tmf.dsmapi.service.qualification.template.TemplateFactory;
 
@@ -48,7 +48,7 @@ public class ServiceQualificationAdminResource {
     
     @GET
     @Produces({"application/json"})
-    public List<ServiceQualification> findAll() {
+    public List<ServiceQualificationEntity> findAll() {
         return serviceQualificationFacade.findAll();
     }
     
@@ -61,7 +61,7 @@ public class ServiceQualificationAdminResource {
     @POST
     @Consumes({"application/json"})
     @Produces({"application/json"})
-    public Response post(List<ServiceQualificationRelation> entities, @Context UriInfo info) throws UnknownResourceException {
+    public Response post(List<ServiceQualificationRelationEntity> entities, @Context UriInfo info) throws UnknownResourceException {
 
         if (entities == null) {
             return Response.status(Response.Status.BAD_REQUEST.getStatusCode()).build();
@@ -74,13 +74,13 @@ public class ServiceQualificationAdminResource {
         String serviceCategoryId;
         String templateName;
         Template template;
-        ServiceQualification serviceQualification;
+        ServiceQualificationEntity serviceQualification;
         try {
-            for (ServiceQualificationRelation entitie : entities) { 
+            for (ServiceQualificationRelationEntity entitie : entities) { 
                 serviceQualification = entitie.convert();
-                Address address = entitie.getAddress();
+                AddressEntity address = entitie.getAddress();
                 if(address != null) {
-                    Address existAddress = null;
+                    AddressEntity existAddress = null;
                     if(address.getId() != null) {
                         existAddress = addressFacade.find(address.getId());
                     } else if(address.getHref() != null) {
@@ -94,8 +94,8 @@ public class ServiceQualificationAdminResource {
                     }
                 }
                 
-                List<ServiceSpecification> servSpecEntities = serviceQualification.getServiceSpecification();
-                for(ServiceSpecification servSpec: servSpecEntities) {
+                List<ServiceSpecificationEntity> servSpecEntities = serviceQualification.getServiceSpecification();
+                for(ServiceSpecificationEntity servSpec: servSpecEntities) {
                     serviceCategoryId = servSpec.getServiceCategoryId();
                     templateName  = TemplateFactory.getInstance().getTemplateName(serviceCategoryId);
                     if(templateName != null) {
@@ -128,9 +128,9 @@ public class ServiceQualificationAdminResource {
     @Path("{id}")
     @Consumes({"application/json"})
     @Produces({"application/json"})
-    public Response update(@PathParam("id") String id, ServiceQualification entity) throws UnknownResourceException {
+    public Response update(@PathParam("id") String id, ServiceQualificationEntity entity) throws UnknownResourceException {
         Response response = null;
-        ServiceQualification serviceQualification = serviceQualificationFacade.find(id);
+        ServiceQualificationEntity serviceQualification = serviceQualificationFacade.find(id);
         if (serviceQualification != null) {
             entity.setId(id);
             serviceQualificationFacade.edit(entity);

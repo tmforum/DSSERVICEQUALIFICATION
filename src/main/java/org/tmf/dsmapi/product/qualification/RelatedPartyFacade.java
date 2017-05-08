@@ -11,7 +11,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import org.tmf.dsmapi.commons.facade.AbstractFacade;
-import org.tmf.dsmapi.product.qualification.model.RelatedParty;
+import org.tmf.dsmapi.product.qualification.entity.RelatedParty;
 
 /**
  *

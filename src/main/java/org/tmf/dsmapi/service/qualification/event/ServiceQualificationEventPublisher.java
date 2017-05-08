@@ -11,7 +11,8 @@ import javax.ejb.Stateless;
 import org.tmf.dsmapi.commons.exceptions.BadUsageException;
 import org.tmf.dsmapi.hub.Hub;
 import org.tmf.dsmapi.hub.HubFacade;
-import org.tmf.dsmapi.service.qualification.req.ServiceQualificationReq;
+import org.tmf.dsmapi.service.qualification.enity.ServiceQualificationReqEntity;
+import org.tmf.dsmapi.service.qualification.model.ServiceQualificationReq;
 
 /**
  *
@@ -49,7 +50,7 @@ public class ServiceQualificationEventPublisher implements ServiceQualificationE
     }
 
     @Override
-    public void createNotification(ServiceQualificationReq bean, Date date) {
+    public void createNotification(ServiceQualificationReqEntity bean, Date date) {
         ServiceQualificationEvent event = new ServiceQualificationEvent();
         event.setEventTime(date);
         event.setEventType(QualificationEventTypeEnum.ServiceQualificationCreation);
